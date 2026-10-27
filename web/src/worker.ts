@@ -87,6 +87,12 @@ self.onmessage = async (e: MessageEvent<WorkerIn>) => {
     let data = r.take_data();
     let [width, height] = [r.width, r.height];
     r.free();
+    if (style) {
+      const c = compose(data, width, height, style);
+      data = c.take_data();
+      [width, height] = [c.width, c.height];
+      c.free();
+    }
     const ms = performance.now() - t0;
     if (m.encode) {
       const blob = await encode(new Uint8ClampedArray(data.buffer), width, height, m.encode.type, m.encode.quality);
