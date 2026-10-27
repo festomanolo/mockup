@@ -257,7 +257,7 @@ mod tests {
         let proj = crate::raster::project(&mesh, &cam, d.derived().ppm * spec_scale, MAX_SIDE, MAX_PIXELS).unwrap();
         let shot = crate::front::prepare_shot(&Image { rgba: &img, w: 40, h: 80 }, Fit::Cover, d.screen.w as f32, d.screen.h as f32, d.screen.w as f32 * spec_scale).unwrap();
         let spec = crate::front::FrontSpec::new(&d, 0, false, Some(shot)).unwrap();
-        let sh = crate::raster::Shading { front: spec, metal: [0.7; 3], deck: (1.0, 1.0) };
+        let sh = crate::raster::Shading { front: spec, metal: [0.7; 3], deck: (1.0, 1.0), wall: None, mm_per_px: 1.0 };
         let data = crate::raster::rasterize(&proj, &sh);
         // sizes agree within the button margin, and the screen centre has the same colour
         assert!((proj.width as i32 - flat.width as i32).abs() <= 8, "{} vs {}", proj.width, flat.width);
