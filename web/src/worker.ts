@@ -77,7 +77,8 @@ self.onmessage = async (e: MessageEvent<WorkerIn>) => {
     const t0 = performance.now();
     const style = m.style ?? "";
     const [w1, h1] = output_size(m.deviceId, m.orientation, 1);
-    let scale = m.maxSide / Math.max(w1, h1);
+    const [fw1, fh1] = style ? final_size(w1, h1, style) : [w1, h1];
+    let scale = m.maxSide / Math.max(fw1, fh1);
     if (m.native) scale = Math.min(1, scale);
     const r = render(
       m.deviceId, m.finish, m.orientation, m.fit, scale,
