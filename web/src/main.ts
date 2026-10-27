@@ -329,7 +329,7 @@ function devicePage(d: Device) {
       let done = 0;
       say(`Generating 0 of ${jobs.length}…`);
       const results = await Promise.all(jobs.map(async ({ s, o }) => {
-        const r = await renderEncoded({ deviceId: d.id, finish: st.finish, orientation: o, fit: st.fit, maxSide: Number(quality.value), native: true, imageId: s.id }, type);
+        const r = await renderEncoded({ deviceId: d.id, finish: st.finish, orientation: o, fit: st.fit, maxSide: Number(quality.value), native: true, imageId: s.id, style: styleJson(st.style) }, type);
         say(`Generating ${++done} of ${jobs.length}…`);
         console.debug(`[mockup] ${d.id} ${o}: ${r.width}x${r.height}, render ${r.ms.toFixed(0)} ms`);
         return { name: `${bases.get(s.id)}-${d.id}-${o}.${ext}`, data: new Uint8Array(await r.blob.arrayBuffer()) };
