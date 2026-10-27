@@ -140,6 +140,9 @@ struct Shadow {
 }
 
 fn axis_table(n: usize, f: f32, max: usize) -> Vec<(u32, u32, f32)> {
+    (0..n)
+        .map(|i| {
+            let fx = ((i as f32 + 0.5) / f - 0.5).max(0.0);
 }
 
 impl Shadow {
