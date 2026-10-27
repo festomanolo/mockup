@@ -131,20 +131,30 @@ fn box_blur(buf: &mut [f32], w: usize, h: usize, r: usize) {
 
 struct Shadow {
     lw: usize,
-    lh: usize,
-    f: f32,
     a: Vec<f32>,
     opacity: f32,
+    /// Per final column: (low-res x0, x1, weight).
+    xt: Vec<(u32, u32, f32)>,
+    /// Per final row: (low-res y0, y1, weight).
+    yt: Vec<(u32, u32, f32)>,
+}
+
+fn axis_table(n: usize, f: f32, max: usize) -> Vec<(u32, u32, f32)> {
+    (0..n)
+        .map(|i| {
+            let fx = ((i as f32 + 0.5) / f - 0.5).max(0.0);
+            let x0 = (fx as usize).min(max - 1);
+            (x0 as u32, (x0 + 1).min(max - 1) as u32, fx - x0 as f32)
+        })
+        .collect()
 }
 
 impl Shadow {
     #[inline]
     fn at(&self, x: usize, y: usize) -> f32 {
-        let (fx, fy) = (((x as f32 + 0.5) / self.f - 0.5).max(0.0), ((y as f32 + 0.5) / self.f - 0.5).max(0.0));
-        let (x0, y0) = ((fx as usize).min(self.lw - 1), (fy as usize).min(self.lh - 1));
-        let (x1, y1) = ((x0 + 1).min(self.lw - 1), (y0 + 1).min(self.lh - 1));
-        let (tx, ty) = (fx - x0 as f32, fy - y0 as f32);
-        let g = |xx: usize, yy: usize| self.a[yy * self.lw + xx];
+        let (x0, x1, tx) = self.xt[x];
+        let (y0, y1, ty) = self.yt[y];
+        let g = |xx: u32, yy: u32| self.a[yy as usize * self.lw + xx as usize];
         let top = g(x0, y0) + (g(x1, y0) - g(x0, y0)) * tx;
         let bot = g(x0, y1) + (g(x1, y1) - g(x0, y1)) * tx;
         (top + (bot - top) * ty) * self.opacity
@@ -177,7 +187,7 @@ fn build_shadow(dev: &[u8], w: usize, h: usize, p: usize, fw: usize, fh: usize, 
     for _ in 0..3 {
         box_blur(&mut a, lw, lh, r);
     }
-    Shadow { lw, lh, f, a, opacity: (layer.2 * strength / 0.6).clamp(0.0, 0.9) }
+    Shadow { lw, a, opacity: (layer.2 * strength / 0.6).clamp(0.0, 0.9), xt: axis_table(fw, f, lw), yt: axis_table(fh, f, lh) }
 }
 
 #[inline]
@@ -219,6 +229,14 @@ pub fn compose(dev: &[u8], w: u32, h: u32, s: &Style) -> Result<(Vec<u8>, u32, u
     let mut out = vec![0u8; fwu * fhu * 4];
     for y in 0..fhu {
         for x in 0..fwu {
+            if x >= pu && y >= pu && x - pu < wu && y - pu < hu {
+                let i = ((y - pu) * wu + (x - pu)) * 4;
+                if dev[i + 3] == 255 {
+                    let o = (y * fwu + x) * 4;
+                    out[o..o + 4].copy_from_slice(&dev[i..i + 4]); // fully covered: no background or shadow shows
+                    continue;
+                }
+            }
             // background (premultiplied)
             let t = (0.5 + ((x as f32 + 0.5 - cx) * dir.0 + (y as f32 + 0.5 - cy) * dir.1) / len).clamp(0.0, 1.0);
             let mut px = [0f32; 4];

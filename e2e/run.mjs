@@ -67,6 +67,10 @@ try {
   // remove the three extra shots again so the zip check stays about the two uploaded files
   for (let i = 0; i < 3; i++) await page.click(".shot:last-child .rm");
   await page.waitForFunction(() => document.querySelectorAll(".shot").length === 2, { timeout: 15000 });
+  const bg = process.env.BG;
+  if (bg) await page.click(`button[aria-label="${bg} background"]`);
+  await new Promise((r) => setTimeout(r, 800));
+  await page.screenshot({ path: join(out, "03-styled.png") });
   await page.click("button.primary");
   await page.waitForFunction(() => /Done:/.test(document.querySelector(".status")?.textContent ?? ""), { timeout: 120000 });
   console.log(`generate: ${((Date.now() - t0) / 1000).toFixed(1)} s for ${2 * expected.length} mockups`);
@@ -78,6 +82,22 @@ try {
   const want = ["shot_one", "second"].flatMap((base) => expected.map((o) => `${base}-${device}-${o}.png`)).sort();
   if (JSON.stringify([...list].sort()) !== JSON.stringify(want)) throw new Error("zip contents differ from expected: " + want.join(", "));
   execFileSync("unzip", ["-tq", join(out, zipName)], { stdio: "inherit" });
+  // inspect one exported PNG: with a background the corner is opaque, otherwise it is transparent with a soft shadow
+  const first = list.find((n) => n.startsWith("second-"));
+  execFileSync("unzip", ["-o", "-q", join(out, zipName), first, "-d", join(out, "x")]);
+  const probe = execFileSync("python3", ["-c", `
+from PIL import Image
+im = Image.open(r"${join(out, "x", first)}").convert("RGBA"); w, h = im.size
+a = im.getchannel("A")
+semi = sum(1 for v in a.getdata() if 0 < v < 255)
+print(w, h, im.getpixel((2, 2)), semi)
+`]).toString().trim();
+  console.log("export probe (w h corner semi-transparent px):", probe);
+  const m = probe.match(/^(\d+) (\d+) \((\d+), (\d+), (\d+), (\d+)\) (\d+)$/);
+  const [r, g, b2, al, semi] = [m[3], m[4], m[5], m[6], m[7]].map(Number);
+  if (bg) { if (al !== 255 || b2 < r + 30) throw new Error("background not applied to export"); }
+  else if (al !== 0 || semi < 1000) throw new Error("expected transparent corner and a soft shadow");
+  void g;
   if (errors.length) throw new Error("console errors: " + errors.join(" | "));
   console.log("E2E OK ->", out);
 } catch (e) {
