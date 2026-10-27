@@ -84,8 +84,8 @@ self.onmessage = async (e: MessageEvent<WorkerIn>) => {
       m.deviceId, m.finish, m.orientation, m.fit, scale,
       img ? new Uint8Array(img.rgba.buffer) : new Uint8Array(0), img?.w ?? 0, img?.h ?? 0,
     );
-    const data = r.take_data();
-    const [width, height] = [r.width, r.height];
+    let data = r.take_data();
+    let [width, height] = [r.width, r.height];
     r.free();
     const ms = performance.now() - t0;
     if (m.encode) {
