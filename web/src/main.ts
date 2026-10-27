@@ -255,6 +255,52 @@ function devicePage(d: Device) {
   quality.setAttribute("aria-label", "Resolution");
   for (const [v, t] of [["4096", "Large (up to 4096 px)"], ["2048", "Medium (2048 px)"], ["1024", "Small (1024 px)"]]) quality.append(el("option", { value: v, textContent: t }));
 
+  // Background & shadow
+  const bgRow = el("div", { class: "bgs" });
+  const custom = { from: "#4facfe", to: "#00f2fe", angle: 135 };
+  const fromIn = el("input", { type: "color", value: custom.from });
+  const toIn = el("input", { type: "color", value: custom.to });
+  fromIn.setAttribute("aria-label", "Gradient start color");
+  toIn.setAttribute("aria-label", "Gradient end color");
+  const angleSel = el("select", {});
+  angleSel.setAttribute("aria-label", "Gradient angle");
+  for (const a of [0, 45, 90, 135, 180, 225, 270, 315]) angleSel.append(el("option", { value: String(a), textContent: `${a}°`, selected: a === 135 }));
+  const padSel = el("select", {});
+  padSel.setAttribute("aria-label", "Padding");
+  for (const [v, t] of [["0", "No padding"], ["0.06", "Small padding"], ["0.12", "Medium padding"], ["0.2", "Large padding"]]) padSel.append(el("option", { value: v, textContent: t }));
+  const shadowSel = el("select", {});
+  shadowSel.setAttribute("aria-label", "Shadow");
+  for (const [v, t] of [["none", "No shadow"], ["soft", "Soft shadow"], ["floating", "Floating shadow"], ["contact", "Contact shadow"]]) shadowSel.append(el("option", { value: v, textContent: t }));
+  const strength = el("input", { type: "range", min: "0", max: "100", step: "5" });
+  strength.setAttribute("aria-label", "Shadow strength");
+  const commitStyle = () => { saveStyle(st.style); drawBgs(); refresh(); };
+  const drawBgs = () => {
+    const chips = BG_PRESETS.map((p) => {
+      const b = el("button", { class: "bgchip", title: p.label });
+      if (p.bg.kind === "transparent") b.classList.add("checker"); else b.style.background = bgCss(p.bg);
+      b.setAttribute("aria-label", `${p.label} background`);
+      b.setAttribute("aria-pressed", String(sameBg(p.bg, st.style.bg)));
+      b.onclick = () => {
+        st.style.bg = structuredClone(p.bg);
+        if (p.bg.kind === "linear") { fromIn.value = p.bg.from; toIn.value = p.bg.to; angleSel.value = String(p.bg.angle); }
+        commitStyle();
+      };
+      return b;
+    });
+    bgRow.replaceChildren(...chips);
+    padSel.value = String(st.style.padding);
+    if (![...padSel.options].some((o) => o.value === padSel.value)) padSel.append(el("option", { value: padSel.value, textContent: `${Math.round(st.style.padding * 100)}% padding`, selected: true }));
+    shadowSel.value = st.style.shadow;
+    strength.value = String(Math.round(st.style.strength * 100));
+    strength.disabled = st.style.shadow === "none";
+  };
+  const applyCustom = () => { st.style.bg = { kind: "linear", from: fromIn.value, to: toIn.value, angle: Number(angleSel.value) }; commitStyle(); };
+  fromIn.oninput = toIn.oninput = applyCustom;
+  angleSel.onchange = applyCustom;
+  padSel.onchange = () => { st.style.padding = Number(padSel.value); commitStyle(); };
+  shadowSel.onchange = () => { st.style.shadow = shadowSel.value as Style["shadow"]; commitStyle(); };
+  strength.oninput = () => { st.style.strength = Number(strength.value) / 100; saveStyle(st.style); refresh(); };
+
   const refresh = () => {
     const my = ++token;
     const cur = st.shots[st.active];
