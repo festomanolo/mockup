@@ -112,6 +112,8 @@ pub fn project(mesh: &Mesh, cam: &Camera, px_per_mm: f32, max_side: u32, max_pix
             iw: idx.map(|i| pv[i].2),
             n: idx.map(|i| nview(mesh.verts[i].n)),
             uv: idx.map(|i| mesh.verts[i].uv),
+            mp: idx.map(|i| mesh.verts[i].p),
+            mn: idx.map(|i| mesh.verts[i].n),
             mat,
             inv_area: 1.0 / area,
             fp: 1.0,
