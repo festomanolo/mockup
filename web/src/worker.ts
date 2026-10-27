@@ -1,5 +1,5 @@
 /// <reference lib="webworker" />
-import init, { output_size, render } from "./wasm/mockup_core.js";
+import init, { compose, final_size, output_size, render } from "./wasm/mockup_core.js";
 
 export type RenderRequest = {
   reqId: number;
