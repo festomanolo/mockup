@@ -203,8 +203,10 @@ impl FrontSpec {
         let slack = if flat { 0.0 } else { 1.5 };
         let body_hw = (b.w / 2.0 - face_inset) * ppm + slack;
         let body_hh = (b.h / 2.0 - face_inset) * ppm + slack;
-        let body_r = ((b.corner_r - face_inset) * ppm).max(1.0);
-        let frame_w = (b.frame + if flat { b.edge_r } else { 0.0 }) * ppm;
+        let body_r = ((if flat { b.corner_r } else { d.corner_r_3d() } - face_inset) * ppm).max(1.0);
+        // seen in 3D, a glass-edged phone shows only a thin metal lip; the rest of the frame
+        // width sits under the cover glass
+        let frame_w = if d.details.glass_edge && !flat { 0.35 * ppm } else { (b.frame + if flat { b.edge_r } else { 0.0 }) * ppm };
         let scr_cy = d.screen.dy * ppm;
         let (bezel_hw, bezel_hh) = (body_hw - slack - frame_w, body_hh - slack - frame_w);
         let chin_y = d.chin_colored.then(|| scr_cy + sh / 2.0 + v.side_bezel.min(v.top_bezel) * ppm);
