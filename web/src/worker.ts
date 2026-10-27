@@ -75,6 +75,7 @@ self.onmessage = async (e: MessageEvent<WorkerIn>) => {
   try {
     const img = m.imageId === null ? null : await getImage(m.imageId, m.file);
     const t0 = performance.now();
+    const style = m.style ?? "";
     const [w1, h1] = output_size(m.deviceId, m.orientation, 1);
     let scale = m.maxSide / Math.max(w1, h1);
     if (m.native) scale = Math.min(1, scale);
