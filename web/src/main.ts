@@ -13,6 +13,58 @@ type Device = {
   orientations: string[];
   sources: Source[];
 };
+type Bg = { kind: "transparent" } | { kind: "solid"; color: string } | { kind: "linear"; from: string; to: string; angle: number };
+type Style = { bg: Bg; padding: number; shadow: "none" | "soft" | "floating" | "contact"; strength: number };
+const DEFAULT_STYLE: Style = { bg: { kind: "transparent" }, padding: 0.06, shadow: "soft", strength: 0.6 };
+const HEX = /^#[0-9a-f]{6}$/i;
+const STYLE_KEY = "mockup.style.v1";
+
+/** Persisted data is untrusted: anything malformed falls back to the default. */
+function sanitizeStyle(raw: unknown): Style {
+  const r = (raw ?? {}) as Partial<Style> & { bg?: Partial<Bg> };
+  const b = r.bg as Record<string, unknown> | undefined;
+  let bg: Bg = { kind: "transparent" };
+  if (b?.kind === "solid" && typeof b.color === "string" && HEX.test(b.color)) bg = { kind: "solid", color: b.color };
+  else if (b?.kind === "linear" && typeof b.from === "string" && HEX.test(b.from) && typeof b.to === "string" && HEX.test(b.to)) {
+    bg = { kind: "linear", from: b.from, to: b.to, angle: Number.isFinite(b.angle) ? Number(b.angle) : 135 };
+  }
+  const pad = Number(r.padding);
+  const str = Number(r.strength);
+  return {
+    bg,
+    padding: Number.isFinite(pad) && pad >= 0 && pad <= 0.5 ? pad : DEFAULT_STYLE.padding,
+    shadow: ["none", "soft", "floating", "contact"].includes(r.shadow as string) ? (r.shadow as Style["shadow"]) : DEFAULT_STYLE.shadow,
+    strength: Number.isFinite(str) && str >= 0 && str <= 1 ? str : DEFAULT_STYLE.strength,
+  };
+}
+function loadStyle(): Style {
+  try {
+    const s = localStorage.getItem(STYLE_KEY);
+    if (s) return sanitizeStyle(JSON.parse(s));
+  } catch { /* storage unavailable or corrupt: use defaults */ }
+  return structuredClone(DEFAULT_STYLE);
+}
+function saveStyle(s: Style) {
+  try { localStorage.setItem(STYLE_KEY, JSON.stringify(s)); } catch { /* ignore */ }
+}
+/** Empty string means "no background, padding or shadow" so the worker skips composition. */
+const styleJson = (s: Style) => (s.bg.kind === "transparent" && s.padding === 0 && s.shadow === "none" ? "" : JSON.stringify(s));
+
+const BG_PRESETS: { label: string; bg: Bg }[] = [
+  { label: "Transparent", bg: { kind: "transparent" } },
+  { label: "White", bg: { kind: "solid", color: "#ffffff" } },
+  { label: "Light gray", bg: { kind: "solid", color: "#eef0f3" } },
+  { label: "Black", bg: { kind: "solid", color: "#0f1114" } },
+  { label: "Ocean", bg: { kind: "linear", from: "#4facfe", to: "#00f2fe", angle: 135 } },
+  { label: "Sunset", bg: { kind: "linear", from: "#fa709a", to: "#fee140", angle: 135 } },
+  { label: "Violet", bg: { kind: "linear", from: "#667eea", to: "#764ba2", angle: 135 } },
+  { label: "Mint", bg: { kind: "linear", from: "#84fab0", to: "#8fd3f4", angle: 135 } },
+  { label: "Peach", bg: { kind: "linear", from: "#ffecd2", to: "#fcb69f", angle: 135 } },
+  { label: "Midnight", bg: { kind: "linear", from: "#232526", to: "#414345", angle: 160 } },
+];
+const bgCss = (b: Bg) => (b.kind === "solid" ? b.color : b.kind === "linear" ? `linear-gradient(${b.angle}deg, ${b.from}, ${b.to})` : "");
+const sameBg = (a: Bg, b: Bg) => JSON.stringify(a) === JSON.stringify(b);
+
 const devices = devicesJson.devices as unknown as Device[];
 const FITS = ["cover", "contain", "stretch"] as const;
 const app = document.getElementById("app")!;
@@ -106,7 +158,7 @@ function devicePage(d: Device) {
   document.title = `${d.name} mockup – Mockup`;
   const st = {
     finish: 0, fit: "cover" as string, view: d.orientations[0],
-    shots: [] as Shot[], active: -1,
+    shots: [] as Shot[], active: -1, style: loadStyle(),
   };
   let token = 0;
 
@@ -203,11 +255,57 @@ function devicePage(d: Device) {
   quality.setAttribute("aria-label", "Resolution");
   for (const [v, t] of [["4096", "Large (up to 4096 px)"], ["2048", "Medium (2048 px)"], ["1024", "Small (1024 px)"]]) quality.append(el("option", { value: v, textContent: t }));
 
+  // Background & shadow
+  const bgRow = el("div", { class: "bgs" });
+  const custom = { from: "#4facfe", to: "#00f2fe", angle: 135 };
+  const fromIn = el("input", { type: "color", value: custom.from });
+  const toIn = el("input", { type: "color", value: custom.to });
+  fromIn.setAttribute("aria-label", "Gradient start color");
+  toIn.setAttribute("aria-label", "Gradient end color");
+  const angleSel = el("select", {});
+  angleSel.setAttribute("aria-label", "Gradient angle");
+  for (const a of [0, 45, 90, 135, 180, 225, 270, 315]) angleSel.append(el("option", { value: String(a), textContent: `${a}°`, selected: a === 135 }));
+  const padSel = el("select", {});
+  padSel.setAttribute("aria-label", "Padding");
+  for (const [v, t] of [["0", "No padding"], ["0.06", "Small padding"], ["0.12", "Medium padding"], ["0.2", "Large padding"]]) padSel.append(el("option", { value: v, textContent: t }));
+  const shadowSel = el("select", {});
+  shadowSel.setAttribute("aria-label", "Shadow");
+  for (const [v, t] of [["none", "No shadow"], ["soft", "Soft shadow"], ["floating", "Floating shadow"], ["contact", "Contact shadow"]]) shadowSel.append(el("option", { value: v, textContent: t }));
+  const strength = el("input", { type: "range", min: "0", max: "100", step: "5" });
+  strength.setAttribute("aria-label", "Shadow strength");
+  const commitStyle = () => { saveStyle(st.style); drawBgs(); refresh(); };
+  const drawBgs = () => {
+    const chips = BG_PRESETS.map((p) => {
+      const b = el("button", { class: "bgchip", title: p.label });
+      if (p.bg.kind === "transparent") b.classList.add("checker"); else b.style.background = bgCss(p.bg);
+      b.setAttribute("aria-label", `${p.label} background`);
+      b.setAttribute("aria-pressed", String(sameBg(p.bg, st.style.bg)));
+      b.onclick = () => {
+        st.style.bg = structuredClone(p.bg);
+        if (p.bg.kind === "linear") { fromIn.value = p.bg.from; toIn.value = p.bg.to; angleSel.value = String(p.bg.angle); }
+        commitStyle();
+      };
+      return b;
+    });
+    bgRow.replaceChildren(...chips);
+    padSel.value = String(st.style.padding);
+    if (![...padSel.options].some((o) => o.value === padSel.value)) padSel.append(el("option", { value: padSel.value, textContent: `${Math.round(st.style.padding * 100)}% padding`, selected: true }));
+    shadowSel.value = st.style.shadow;
+    strength.value = String(Math.round(st.style.strength * 100));
+    strength.disabled = st.style.shadow === "none";
+  };
+  const applyCustom = () => { st.style.bg = { kind: "linear", from: fromIn.value, to: toIn.value, angle: Number(angleSel.value) }; commitStyle(); };
+  fromIn.oninput = toIn.oninput = applyCustom;
+  angleSel.onchange = applyCustom;
+  padSel.onchange = () => { st.style.padding = Number(padSel.value); commitStyle(); };
+  shadowSel.onchange = () => { st.style.shadow = shadowSel.value as Style["shadow"]; commitStyle(); };
+  strength.oninput = () => { st.style.strength = Number(strength.value) / 100; saveStyle(st.style); refresh(); };
+
   const refresh = () => {
     const my = ++token;
     const cur = st.shots[st.active];
     hint.style.display = cur || st.view !== "portrait" ? "none" : "";
-    render({ key: "preview", deviceId: d.id, finish: st.finish, orientation: st.view, fit: st.fit, maxSide: 1000, native: true, imageId: cur?.id ?? null })
+    render({ key: "preview", deviceId: d.id, finish: st.finish, orientation: st.view, fit: st.fit, maxSide: 1000, native: true, imageId: cur?.id ?? null, style: styleJson(st.style) })
       .then((r) => { if (my === token) paint(preview, r); }).catch((e) => { if (!(e instanceof Superseded)) say(e.message, true); });
   };
 
@@ -231,7 +329,7 @@ function devicePage(d: Device) {
       let done = 0;
       say(`Generating 0 of ${jobs.length}…`);
       const results = await Promise.all(jobs.map(async ({ s, o }) => {
-        const r = await renderEncoded({ deviceId: d.id, finish: st.finish, orientation: o, fit: st.fit, maxSide: Number(quality.value), native: true, imageId: s.id }, type);
+        const r = await renderEncoded({ deviceId: d.id, finish: st.finish, orientation: o, fit: st.fit, maxSide: Number(quality.value), native: true, imageId: s.id, style: styleJson(st.style) }, type);
         say(`Generating ${++done} of ${jobs.length}…`);
         console.debug(`[mockup] ${d.id} ${o}: ${r.width}x${r.height}, render ${r.ms.toFixed(0)} ms`);
         return { name: `${bases.get(s.id)}-${d.id}-${o}.${ext}`, data: new Uint8Array(await r.blob.arrayBuffer()) };
@@ -251,11 +349,14 @@ function devicePage(d: Device) {
     card("File upload", drop, file, hintTxt, list),
     el("section", { class: "pcard" }, el("h2", {}, "Color"), colorName, sw, gen, status),
     card("Device orientations", ori),
+    card("Background & shadow", bgRow,
+      el("div", { class: "row tight" }, el("span", { class: "fine" }, "Custom gradient"), fromIn, toIn, angleSel),
+      el("div", { class: "row" }, padSel, shadowSel), el("label", { class: "fine range" }, "Shadow strength", strength)),
     card("Options", el("div", { class: "row" }, fit, fmt, quality)),
     specs(d));
   shell(el("div", {}, el("a", { href: "/", class: "back", textContent: "← All devices" }),
     el("div", { class: "layout" }, stage, panel)));
-  drawSw(); drawOri(); drawList(); refresh();
+  drawSw(); drawOri(); drawBgs(); drawList(); refresh();
   currentLoad = (fs) => void load(fs);
 }
 

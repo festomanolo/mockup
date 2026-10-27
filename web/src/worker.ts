@@ -1,5 +1,5 @@
 /// <reference lib="webworker" />
-import init, { output_size, render } from "./wasm/mockup_core.js";
+import init, { compose, final_size, output_size, render } from "./wasm/mockup_core.js";
 
 export type RenderRequest = {
   reqId: number;
@@ -11,6 +11,8 @@ export type RenderRequest = {
   maxSide: number;
   native: boolean;
   imageId: number | null;
+  /** Background/padding/shadow as JSON (empty string = none); sizes include padding and shadow. */
+  style?: string;
   /** Source file; decoded here on a cache miss so only workers that render an image hold its pixels. */
   file?: File;
   /** When set the result is encoded in the worker and returned as a Blob. */
@@ -73,16 +75,24 @@ self.onmessage = async (e: MessageEvent<WorkerIn>) => {
   try {
     const img = m.imageId === null ? null : await getImage(m.imageId, m.file);
     const t0 = performance.now();
+    const style = m.style ?? "";
     const [w1, h1] = output_size(m.deviceId, m.orientation, 1);
-    let scale = m.maxSide / Math.max(w1, h1);
+    const [fw1, fh1] = style ? final_size(w1, h1, style) : [w1, h1];
+    let scale = m.maxSide / Math.max(fw1, fh1);
     if (m.native) scale = Math.min(1, scale);
     const r = render(
       m.deviceId, m.finish, m.orientation, m.fit, scale,
       img ? new Uint8Array(img.rgba.buffer) : new Uint8Array(0), img?.w ?? 0, img?.h ?? 0,
     );
-    const data = r.take_data();
-    const [width, height] = [r.width, r.height];
+    let data = r.take_data();
+    let [width, height] = [r.width, r.height];
     r.free();
+    if (style) {
+      const c = compose(data, width, height, style);
+      data = c.take_data();
+      [width, height] = [c.width, c.height];
+      c.free();
+    }
     const ms = performance.now() - t0;
     if (m.encode) {
       const blob = await encode(new Uint8ClampedArray(data.buffer), width, height, m.encode.type, m.encode.quality);

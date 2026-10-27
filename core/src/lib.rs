@@ -1,6 +1,7 @@
 //! mockup-core: device manifest + software renderer. Compiled natively for tests
 //! and to WebAssembly (feature `wasm`) for the browser.
 
+pub mod compose;
 pub mod front;
 pub mod geometry;
 pub mod manifest;
@@ -54,6 +55,22 @@ mod wasm {
         let (d, o) = lookup(device_id, orientation)?;
         let (w, h) = render::output_size(&d, o, scale).map_err(|e| JsError::new(&e))?;
         Ok(vec![w, h])
+    }
+
+    /// Final size after background/padding/shadow for a device image of `w x h`: `[width, height]`.
+    #[wasm_bindgen]
+    pub fn final_size(w: u32, h: u32, style_json: &str) -> Result<Vec<u32>, JsError> {
+        let st = crate::compose::parse_style(style_json).map_err(|e| JsError::new(&e))?;
+        let (fw, fh, _) = crate::compose::final_layout(w, h, &st);
+        Ok(vec![fw, fh])
+    }
+
+    /// Composes a rendered device (straight RGBA) onto a background with padding and shadows.
+    #[wasm_bindgen]
+    pub fn compose(rgba: &[u8], w: u32, h: u32, style_json: &str) -> Result<Rendered, JsError> {
+        let st = crate::compose::parse_style(style_json).map_err(|e| JsError::new(&e))?;
+        let (data, fw, fh) = crate::compose::compose(rgba, w, h, &st).map_err(|e| JsError::new(&e))?;
+        Ok(Rendered { width: fw, height: fh, data })
     }
 
     /// `rgba` may be empty to render the blank white screen.
