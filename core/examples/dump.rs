@@ -23,6 +23,11 @@ fn main() {
         let i = ((y * iw + x) * 4) as usize;
         img[i] = (x * 255 / iw) as u8; img[i + 1] = (y * 255 / ih) as u8; img[i + 2] = if (x / 20 + y / 20) % 2 == 0 { 220 } else { 90 };
     } }
+    dump(d, &id, &dir, scale, &img, iw, ih);
+}
+
+fn dump(d: &mockup_core::manifest::Device, id: &str, dir: &str, scale: f32, img: &[u8], iw: u32, ih: u32) {
+    let only = std::env::var("O").ok();
     for name in &d.orientations {
         let o = Orientation::parse(name).unwrap();
         let t = std::time::Instant::now();
