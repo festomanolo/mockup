@@ -356,7 +356,7 @@ function devicePage(d: Device) {
     specs(d));
   shell(el("div", {}, el("a", { href: "/", class: "back", textContent: "← All devices" }),
     el("div", { class: "layout" }, stage, panel)));
-  drawSw(); drawOri(); drawList(); refresh();
+  drawSw(); drawOri(); drawBgs(); drawList(); refresh();
   currentLoad = (fs) => void load(fs);
 }
 
