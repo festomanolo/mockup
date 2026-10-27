@@ -229,6 +229,10 @@ pub fn compose(dev: &[u8], w: u32, h: u32, s: &Style) -> Result<(Vec<u8>, u32, u
     let mut out = vec![0u8; fwu * fhu * 4];
     for y in 0..fhu {
         for x in 0..fwu {
+            if x >= pu && y >= pu && x - pu < wu && y - pu < hu {
+                let i = ((y - pu) * wu + (x - pu)) * 4;
+                if dev[i + 3] == 255 {
+                    let o = (y * fwu + x) * 4;
             // background (premultiplied)
             let t = (0.5 + ((x as f32 + 0.5 - cx) * dir.0 + (y as f32 + 0.5 - cy) * dir.1) / len).clamp(0.0, 1.0);
             let mut px = [0f32; 4];
