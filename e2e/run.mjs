@@ -90,6 +90,7 @@ print(w, h, im.getpixel((2, 2)), semi)
 `]).toString().trim();
   console.log("export probe (w h corner semi-transparent px):", probe);
   const m = probe.match(/^(\d+) (\d+) \((\d+), (\d+), (\d+), (\d+)\) (\d+)$/);
+  const [r, g, b2, al, semi] = [m[3], m[4], m[5], m[6], m[7]].map(Number);
   if (errors.length) throw new Error("console errors: " + errors.join(" | "));
   console.log("E2E OK ->", out);
 } catch (e) {
