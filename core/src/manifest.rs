@@ -44,6 +44,9 @@ pub struct Device {
     pub bezel_color: Option<String>,
     #[serde(default)]
     pub chin_colored: bool,
+    /// Optional fine detail for the 3D views (ports, antenna bands, glass edge).
+    #[serde(default)]
+    pub details: Details,
     pub sources: Vec<Source>,
 }
 
