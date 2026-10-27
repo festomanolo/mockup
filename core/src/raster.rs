@@ -57,8 +57,13 @@ impl STri {
 
     #[inline]
     fn normal_at(&self, b: [f32; 3]) -> V3 {
-        norm([0, 1, 2].map(|k| b[0] * self.n[0][k] + b[1] * self.n[1][k] + b[2] * self.n[2][k]))
+        norm(lerp3(&self.n, b))
     }
+}
+
+#[inline]
+fn lerp3(v: &[V3; 3], b: [f32; 3]) -> V3 {
+    [0, 1, 2].map(|k| b[0] * v[0][k] + b[1] * v[1][k] + b[2] * v[2][k])
 }
 
 pub struct Projected {
