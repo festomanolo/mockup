@@ -9,6 +9,7 @@ pub use crate::front::{Fit, Image};
 use crate::manifest::{parse_hex, Device, Kind};
 use crate::mesh::{self, mul_m, rot_x, rot_y, rot_z, M3};
 use crate::raster::{project, rasterize, Camera, Shading};
+use crate::wall::{Wall, BUTTONS};
 
 pub const MAX_SIDE: u32 = 12_000;
 pub const MAX_PIXELS: u64 = 80_000_000;
