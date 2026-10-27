@@ -32,7 +32,7 @@ fn dump(d: &mockup_core::manifest::Device, id: &str, dir: &str, scale: f32, img:
         if only.as_deref().is_some_and(|o| o != name) { continue; }
         let o = Orientation::parse(name).unwrap();
         let t = std::time::Instant::now();
-        let out = render(d, &Params { finish: 0, orientation: o, fit: Fit::Cover, scale, screenshot: Some(Image { rgba: &img, w: iw, h: ih }) }).unwrap();
+        let out = render(d, &Params { finish: 0, orientation: o, fit: Fit::Cover, scale, screenshot: Some(Image { rgba: img, w: iw, h: ih }) }).unwrap();
         eprintln!("{id} {name}: {}x{} in {:?}", out.width, out.height, t.elapsed());
         let mut f = std::fs::File::create(format!("{dir}/{id}-{name}.ppm")).unwrap();
         write!(f, "P6\n{} {}\n255\n", out.width, out.height).unwrap();
