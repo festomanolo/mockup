@@ -305,7 +305,7 @@ function devicePage(d: Device) {
     const my = ++token;
     const cur = st.shots[st.active];
     hint.style.display = cur || st.view !== "portrait" ? "none" : "";
-    render({ key: "preview", deviceId: d.id, finish: st.finish, orientation: st.view, fit: st.fit, maxSide: 1000, native: true, imageId: cur?.id ?? null })
+    render({ key: "preview", deviceId: d.id, finish: st.finish, orientation: st.view, fit: st.fit, maxSide: 1000, native: true, imageId: cur?.id ?? null, style: styleJson(st.style) })
       .then((r) => { if (my === token) paint(preview, r); }).catch((e) => { if (!(e instanceof Superseded)) say(e.message, true); });
   };
 
