@@ -136,6 +136,10 @@ struct Shadow {
     /// Per final column: (low-res x0, x1, weight).
     xt: Vec<(u32, u32, f32)>,
     /// Per final row: (low-res y0, y1, weight).
+    yt: Vec<(u32, u32, f32)>,
+}
+
+fn axis_table(n: usize, f: f32, max: usize) -> Vec<(u32, u32, f32)> {
 }
 
 impl Shadow {
