@@ -6,6 +6,7 @@
 
 use crate::front::{sd_rrect, FrontSpec};
 use crate::mesh::{dot, norm, Mat, Mesh, M3, V3};
+use crate::wall::Wall;
 
 const SS: usize = 2;
 const TS: usize = 32; // tile size in output pixels
@@ -25,6 +26,9 @@ pub struct STri {
     iw: [f32; 3],
     n: [V3; 3],
     uv: [[f32; 2]; 3],
+    /// Model-space positions and normals (for the wall shader).
+    mp: [V3; 3],
+    mn: [V3; 3],
     mat: Mat,
     inv_area: f32,
     /// Face-unit footprint of one output pixel, measured once at the triangle centre.
@@ -53,8 +57,13 @@ impl STri {
 
     #[inline]
     fn normal_at(&self, b: [f32; 3]) -> V3 {
-        norm([0, 1, 2].map(|k| b[0] * self.n[0][k] + b[1] * self.n[1][k] + b[2] * self.n[2][k]))
+        norm(lerp3(&self.n, b))
     }
+}
+
+#[inline]
+fn lerp3(v: &[V3; 3], b: [f32; 3]) -> V3 {
+    [0, 1, 2].map(|k| b[0] * v[0][k] + b[1] * v[1][k] + b[2] * v[2][k])
 }
 
 pub struct Projected {
@@ -103,6 +112,8 @@ pub fn project(mesh: &Mesh, cam: &Camera, px_per_mm: f32, max_side: u32, max_pix
             iw: idx.map(|i| pv[i].2),
             n: idx.map(|i| nview(mesh.verts[i].n)),
             uv: idx.map(|i| mesh.verts[i].uv),
+            mp: idx.map(|i| mesh.verts[i].p),
+            mn: idx.map(|i| mesh.verts[i].n),
             mat,
             inv_area: 1.0 / area,
             fp: 1.0,
@@ -124,6 +135,10 @@ pub struct Shading {
     pub metal: [f32; 3],
     /// Deck plane size in mm (width, depth).
     pub deck: (f32, f32),
+    /// Phones/tablets: detailed side walls instead of plain metal.
+    pub wall: Option<Wall>,
+    /// Size of one output pixel in mm (anti-aliasing width for wall details).
+    pub mm_per_px: f32,
 }
 
 const LIGHT: V3 = [-0.40, 0.62, 0.68];
@@ -179,7 +194,10 @@ fn shade_sample(t: &STri, l: [f32; 3], sh: &Shading) -> [f32; 3] {
     let b = t.persp(l);
     let n = t.normal_at(b);
     match t.mat {
-        Mat::Metal => metal(sh.metal, n),
+        Mat::Metal => match &sh.wall {
+            Some(w) => w.shade(lerp3(&t.mp, b), norm(lerp3(&t.mn, b)), sh.mm_per_px * 1.5),
+            None => metal(sh.metal, n),
+        },
         Mat::Front | Mat::Deck => {
             let uv = t.uv_at(b);
             let fp = t.fp;

@@ -182,6 +182,8 @@ pub struct FrontSpec {
     safe_hw: f32,
     safe_hh: f32,
     cam_box: [f32; 4],
+    /// Cover-glass bezel: dark grey with black hairlines (see `Details::glass_edge`); face px per mm.
+    glass: Option<f32>,
 }
 
 impl FrontSpec {
@@ -201,8 +203,10 @@ impl FrontSpec {
         let slack = if flat { 0.0 } else { 1.5 };
         let body_hw = (b.w / 2.0 - face_inset) * ppm + slack;
         let body_hh = (b.h / 2.0 - face_inset) * ppm + slack;
-        let body_r = ((b.corner_r - face_inset) * ppm).max(1.0);
-        let frame_w = (b.frame + if flat { b.edge_r } else { 0.0 }) * ppm;
+        let body_r = ((if flat { b.corner_r } else { d.corner_r_3d() } - face_inset) * ppm).max(1.0);
+        // seen in 3D, a glass-edged phone shows only a thin metal lip; the rest of the frame
+        // width sits under the cover glass
+        let frame_w = if d.details.glass_edge && !flat { 0.35 * ppm } else { (b.frame + if flat { b.edge_r } else { 0.0 }) * ppm };
         let scr_cy = d.screen.dy * ppm;
         let (bezel_hw, bezel_hh) = (body_hw - slack - frame_w, body_hh - slack - frame_w);
         let chin_y = d.chin_colored.then(|| scr_cy + sh / 2.0 + v.side_bezel.min(v.top_bezel) * ppm);
@@ -241,6 +245,7 @@ impl FrontSpec {
             cam,
             rim: flat,
             shot,
+            glass: d.details.glass_edge.then_some(ppm),
         })
     }
 
@@ -303,7 +308,18 @@ impl FrontSpec {
                 if let Some(cy) = self.chin_y {
                     db = db.max(y - cy);
                 }
-                over(&mut px, self.bezel_rgb, cover(db, fp) * a);
+                let bezel = match self.glass {
+                    // black at the screen edge, ramping into grey glass, black hairline at the frame
+                    Some(k) => {
+                        let inner = ((ds - 0.15 * k) / (0.45 * k)).clamp(0.0, 1.0);
+                        let outer = ((-db - 0.12 * k) / (0.12 * k)).clamp(0.0, 1.0);
+                        // in the tilted views the glass reflects grey along the bottom, black at the top
+                        let lit = if self.rim { 1.0 } else { 0.2 + 0.8 * ((y / self.scr_hh + 0.25) / 1.1).clamp(0.0, 1.0) };
+                        [0.215 * inner * outer * lit; 3]
+                    }
+                    None => self.bezel_rgb,
+                };
+                over(&mut px, bezel, cover(db, fp) * a);
             }
         }
         let sa = cover(ds, fp);
@@ -321,9 +337,14 @@ impl FrontSpec {
                     over(&mut px, [0.08, 0.09, 0.12], a);
                 } else {
                     over(&mut px, [0.0, 0.0, 0.0], a);
-                    // dark rim around a blue-black lens
-                    over(&mut px, [0.2, 0.21, 0.24], cover(cam_d + r * 0.18, fp) * (1.0 - cover(cam_d + r * 0.42, fp)) * sa);
-                    over(&mut px, [0.1, 0.13, 0.2], cover(cam_d + r * 0.62, fp) * sa);
+                    // grey lens barrel around a blue-black lens with a small glint
+                    over(&mut px, [0.38, 0.38, 0.4], cover(cam_d + r * 0.16, fp) * (1.0 - cover(cam_d + r * 0.46, fp)) * sa);
+                    over(&mut px, [0.07, 0.08, 0.11], cover(cam_d + r * 0.46, fp) * sa);
+                    let (gx, gy) = match self.cam {
+                        Cam::Punch { cy, .. } => (x + r * 0.22, y - cy + r * 0.22),
+                        _ => (f32::MAX, 0.0),
+                    };
+                    over(&mut px, [0.75, 0.78, 0.82], cover(gx.hypot(gy) - r * 0.12, fp) * sa * 0.8);
                 }
             }
             Cam::Island { .. } | Cam::Notch { .. } => over(&mut px, [0.0, 0.0, 0.0], cover(cam_d, fp) * sa),

@@ -246,13 +246,14 @@ pub fn build(d: &Device) -> Mesh {
     let b = &d.body;
     let ppm = d.derived().ppm;
     let ident = Xf { ex: [1.0, 0.0, 0.0], ey: [0.0, 1.0, 0.0], ez: [0.0, 0.0, 1.0], o: [0.0, 0.0, 0.0] };
-    let front = |hw: f32, hh: f32, depth: f32| Extrusion { hw, hh, r: b.corner_r, depth, e: b.edge_r, front: Mat::Front, uv_scale: ppm, flip_v: true };
+    let front = |hw: f32, hh: f32, depth: f32| Extrusion { hw, hh, r: d.corner_r_3d(), depth, e: b.edge_r, front: Mat::Front, uv_scale: ppm, flip_v: true };
     match d.kind {
         Kind::Phone | Kind::Tablet => {
             m.extrude(&front(b.w / 2.0, b.h / 2.0, b.d), &ident);
-            // power and volume buttons on the right side wall
+            // power and volume buttons on the right side wall (or painted by the wall shader)
             let t = 0.5;
-            for (from_top, half) in [(0.25, 0.065), (0.41, 0.033)] {
+            let buttons: &[(f32, f32)] = if d.details.wall_buttons { &[] } else { &crate::wall::BUTTONS };
+            for &(from_top, half) in buttons {
                 m.cuboid([b.w / 2.0 - t * 0.2, b.h * (0.5 - from_top), -b.d / 2.0], [t, b.h * half, (b.d * 0.17).max(0.5)], &ident, Mat::Metal);
             }
         }

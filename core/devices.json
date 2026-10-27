@@ -27,10 +27,24 @@
     "y": 3.3,
     "r": 1.5
    },
+   "details": {
+    "glass_edge": true,
+    "wall_buttons": true,
+    "corner_r_3d": 2.8,
+    "ports": [
+     {"kind": "tray", "x": -14.8, "w": 12.8, "h": 3.2},
+     {"kind": "hole", "x": -9.3, "w": 0.9, "h": 0.9},
+     {"kind": "hole", "x": -6.9, "w": 0.7, "h": 0.7},
+     {"kind": "usb_c", "x": 0.0, "w": 9.6, "h": 3.4},
+     {"kind": "slot", "x": 17.1, "w": 8.4, "h": 0.8},
+     {"kind": "spen", "x": 31.8, "w": 7.4, "h": 4.4}
+    ],
+    "bands": {"bottom": [-21.6, 24.6], "top": [-21.6, 24.6], "side": [12.0, 150.3]}
+   },
    "finishes": [
     {
      "name": "Titanium Gray",
-     "color": "#b5ab9f"
+     "color": "#c3beb7"
     },
     {
      "name": "Titanium Black",
@@ -81,6 +95,11 @@
      "field": "screen.radius_mm",
      "status": "derived",
      "note": "Measured from a MockUPhone S24 Ultra export (corner ~0.5-1 mm, rim ~1.2-1.5 mm)."
+    },
+    {
+     "field": "details",
+     "status": "derived",
+     "note": "Port, S Pen and antenna-band positions measured along the bottom wall of MockUPhone's tilted S24 Ultra exports (~14 px/mm); sizes within ~0.5 mm."
     },
     {
      "field": "camera",

@@ -44,7 +44,57 @@ pub struct Device {
     pub bezel_color: Option<String>,
     #[serde(default)]
     pub chin_colored: bool,
+    /// Optional fine detail for the 3D views (ports, antenna bands, glass edge).
+    #[serde(default)]
+    pub details: Details,
     pub sources: Vec<Source>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+pub struct Details {
+    /// Bezel drawn as dark-grey cover glass with black hairlines instead of flat black.
+    #[serde(default)]
+    pub glass_edge: bool,
+    /// Openings on the bottom wall, x measured from the centre (seen from the front, +x right).
+    #[serde(default)]
+    pub ports: Vec<Port>,
+    #[serde(default)]
+    pub bands: Bands,
+    /// Draw the side buttons on the right wall instead of modelling them as boxes.
+    #[serde(default)]
+    pub wall_buttons: bool,
+    /// Plan-view corner radius of the 3D model when it differs from the flat outline, mm.
+    #[serde(default)]
+    pub corner_r_3d: Option<f32>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PortKind {
+    UsbC,
+    Slot,
+    Hole,
+    Tray,
+    Spen,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct Port {
+    pub kind: PortKind,
+    pub x: f32,
+    pub w: f32,
+    pub h: f32,
+}
+
+/// Antenna split lines: x positions on the bottom/top walls, distance from the top on the long sides.
+#[derive(Debug, Clone, Default, Deserialize)]
+pub struct Bands {
+    #[serde(default)]
+    pub bottom: Vec<f32>,
+    #[serde(default)]
+    pub top: Vec<f32>,
+    #[serde(default)]
+    pub side: Vec<f32>,
 }
 
 /// Outer body of the phone/tablet, or the lid / display slab for laptops and iMacs.
@@ -125,6 +175,11 @@ pub struct Derived {
 }
 
 impl Device {
+    /// Corner radius used by the 3D model.
+    pub fn corner_r_3d(&self) -> f32 {
+        self.details.corner_r_3d.unwrap_or(self.body.corner_r)
+    }
+
     pub fn derived(&self) -> Derived {
         let (sw, sh) = (self.screen.w as f32, self.screen.h as f32);
         let diag_mm = self.screen.diag_in * 25.4;
@@ -210,6 +265,18 @@ pub fn validate(m: &Manifest) -> Result<(), String> {
             if s.total_h <= b.h || s.foot_w <= 0.0 || s.foot_d <= 0.0 || s.foot_t <= 0.0 {
                 return Err(format!("{id}: invalid stand spec"));
             }
+        }
+        if d.details.corner_r_3d.is_some_and(|r| !(r > b.edge_r + 0.2 && r < b.w / 4.0)) {
+            return Err(format!("{id}: invalid corner_r_3d"));
+        }
+        for p in &d.details.ports {
+            if !(p.w > 0.0 && p.h > 0.0 && p.h < b.d && p.x.abs() + p.w / 2.0 < b.w / 2.0 - b.edge_r) {
+                return Err(format!("{id}: port {:?} does not fit the bottom wall", p.kind));
+            }
+        }
+        let bd = &d.details.bands;
+        if bd.bottom.iter().chain(&bd.top).any(|x| x.abs() >= b.w / 2.0) || bd.side.iter().any(|y| !(0.0..b.h).contains(y)) {
+            return Err(format!("{id}: antenna band outside the body"));
         }
         if d.sources.is_empty() {
             return Err(format!("{id}: missing source records"));

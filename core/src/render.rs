@@ -9,6 +9,7 @@ pub use crate::front::{Fit, Image};
 use crate::manifest::{parse_hex, Device, Kind};
 use crate::mesh::{self, mul_m, rot_x, rot_y, rot_z, M3};
 use crate::raster::{project, rasterize, Camera, Shading};
+use crate::wall::{Wall, BUTTONS};
 
 pub const MAX_SIDE: u32 = 12_000;
 pub const MAX_PIXELS: u64 = 80_000_000;
@@ -66,9 +67,10 @@ fn is_flat(d: &Device, o: Orientation) -> bool {
 /// Camera rotation for a given view. Angles are tuned so thickness reads clearly.
 fn camera(d: &Device, o: Orientation) -> Camera {
     let (rot, dist_k): (M3, f32) = match (d.kind, o) {
-        // phones/tablets lying on a desk, seen from above at an angle (like MockUPhone's tilted views)
-        (Kind::Phone | Kind::Tablet, Orientation::Right) => (mul_m(&rot_x(-0.95), &mul_m(&rot_z(0.62), &rot_y(0.0))), 9.0),
-        (Kind::Phone | Kind::Tablet, Orientation::Left) => (mul_m(&rot_x(-0.95), &mul_m(&rot_z(-0.62), &rot_y(0.0))), 9.0),
+        // phones/tablets lying on a desk, seen from above at an angle; fitted to MockUPhone's tilted
+        // exports (screen corners give rot_x -0.775, rot_z 0.615 and ~10x body length eye distance)
+        (Kind::Phone | Kind::Tablet, Orientation::Right) => (mul_m(&rot_x(-0.775), &rot_z(0.615)), 10.0),
+        (Kind::Phone | Kind::Tablet, Orientation::Left) => (mul_m(&rot_x(-0.775), &rot_z(-0.615)), 10.0),
         (_, Orientation::Right) => (mul_m(&rot_x(0.2), &rot_y(0.62)), 6.0),
         (_, Orientation::Left) => (mul_m(&rot_x(0.2), &rot_y(-0.62)), 6.0),
         _ => (rot_x(if d.kind == Kind::Imac { 0.05 } else { 0.2 }), 6.0),
@@ -135,7 +137,8 @@ pub fn render(d: &Device, p: &Params) -> Result<Output, String> {
     }
     let mesh = mesh::build(d);
     let proj = project(&mesh, &camera(d, p.orientation), px_per_mm(d, p.scale), MAX_SIDE, MAX_PIXELS)?;
-    let shading = Shading { front: spec, metal, deck: (d.body.w, d.body.h) };
+    let wall = matches!(d.kind, Kind::Phone | Kind::Tablet).then(|| Wall::new(d, metal));
+    let shading = Shading { front: spec, metal, deck: (d.body.w, d.body.h), wall, mm_per_px: 1.0 / px_per_mm(d, p.scale) };
     let data = rasterize(&proj, &shading);
     Ok(Output { width: proj.width, height: proj.height, data })
 }
@@ -148,7 +151,6 @@ fn render_flat(d: &Device, p: &Params, spec: &FrontSpec, metal: [f32; 3]) -> Res
     let (cx, cy) = (wf / 2.0, hf / 2.0);
     let (bhw, bhh) = spec.body_half();
     let btn = metal.map(|c| c * 0.8);
-    let buttons: [(f32, f32); 2] = [(0.25, 0.065), (0.41, 0.033)];
     let landscape = p.orientation == Orientation::Landscape;
     let fp = 1.0 / s;
     let mut data = vec![0u8; (ow as usize) * (oh as usize) * 4];
@@ -163,7 +165,7 @@ fn render_flat(d: &Device, p: &Params, spec: &FrontSpec, metal: [f32; 3]) -> Res
             let mut px = [0f32; 4];
             // side buttons peek out from under the body on the right edge
             if u > bhw - ppm {
-                for (from_top, half) in buttons {
+                for (from_top, half) in BUTTONS {
                     let by = (from_top - 0.5) * 2.0 * bhh;
                     let dd = sd_rrect(u, v, bhw - 0.1 * ppm, by, 0.5 * ppm, half * 2.0 * bhh, 0.3 * ppm);
                     over(&mut px, btn, cover(dd, fp));

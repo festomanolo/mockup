@@ -12,6 +12,7 @@ The renderer is Rust compiled to WebAssembly, running in a pool of Web Workers. 
 - **Import:** multiple files at once via picker, drag-and-drop anywhere, or paste. PNG/JPEG/WebP.
 - **Export:** PNG (transparent), WebP, JPEG; Large (native, max 4096 px), Medium 2048, Small 1024. Always one zip.
 - **Fit modes:** fill (crop), fit inside, stretch.
+- **Backgrounds and shadows:** transparent, solid, 6 gradient presets plus a custom two-colour gradient with angle; padding (none/small/medium/large); soft, floating and contact shadows with a strength slider. Shadows are blurred from the device's own silhouette (two layers: ambient + contact), the canvas grows to fit, and the choice is remembered in the browser. Defaults: transparent background, small padding, soft shadow.
 
 ## Dimension data
 
@@ -32,7 +33,7 @@ Why not bundle MockUPhone's frame images: the `oursky/mockuphone.com` repository
 ## Known limitations
 
 - Frames are original artwork, not manufacturer renders. They are accurate in size and proportion, but details such as camera bumps, speaker grills, hinge shape, logos and the exact curved iMac stand are simplified or absent.
-- No soft shadow, backgrounds, or multi-device canvas yet; PSD input is not supported.
+- No multi-device canvas yet; PSD input is not supported. Shadows are drop shadows from the silhouette, not a physically modelled ground plane.
 - Estimated values (above) are not measured from real products.
 - Trademarks: product names are used descriptively; no logos are drawn. Review brand/trade-dress guidance before selling.
 
@@ -53,6 +54,7 @@ npm run build                                      # typecheck + production buil
 cargo test --release                               # Rust tests (manifest, mesh, render)
 cd e2e && npm install && node run.mjs              # real-Chrome upload -> generate -> zip check
 cargo run --release --example bench                # native render timings
+cargo run --release --example bench_compose        # native background/shadow timings
 ```
 
 ## Measured performance (Intel i5-10310U laptop, 1.7 GHz)
