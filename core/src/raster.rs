@@ -26,6 +26,9 @@ pub struct STri {
     iw: [f32; 3],
     n: [V3; 3],
     uv: [[f32; 2]; 3],
+    /// Model-space positions and normals (for the wall shader).
+    mp: [V3; 3],
+    mn: [V3; 3],
     mat: Mat,
     inv_area: f32,
     /// Face-unit footprint of one output pixel, measured once at the triangle centre.
