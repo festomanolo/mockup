@@ -153,9 +153,8 @@ impl Shadow {
     #[inline]
     fn at(&self, x: usize, y: usize) -> f32 {
         let (x0, x1, tx) = self.xt[x];
-        let (x1, y1) = ((x0 + 1).min(self.lw - 1), (y0 + 1).min(self.lh - 1));
-        let (tx, ty) = (fx - x0 as f32, fy - y0 as f32);
-        let g = |xx: usize, yy: usize| self.a[yy * self.lw + xx];
+        let (y0, y1, ty) = self.yt[y];
+        let g = |xx: u32, yy: u32| self.a[yy as usize * self.lw + xx as usize];
         let top = g(x0, y0) + (g(x1, y0) - g(x0, y0)) * tx;
         let bot = g(x0, y1) + (g(x1, y1) - g(x0, y1)) * tx;
         (top + (bot - top) * ty) * self.opacity
