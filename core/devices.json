@@ -97,6 +97,11 @@
      "note": "Measured from a MockUPhone S24 Ultra export (corner ~0.5-1 mm, rim ~1.2-1.5 mm)."
     },
     {
+     "field": "details",
+     "status": "derived",
+     "note": "Port, S Pen and antenna-band positions measured along the bottom wall of MockUPhone's tilted S24 Ultra exports (~14 px/mm); sizes within ~0.5 mm."
+    },
+    {
      "field": "camera",
      "status": "estimated",
      "note": "Not published; chosen to match the real product's appearance."
