@@ -133,6 +133,9 @@ struct Shadow {
     lw: usize,
     a: Vec<f32>,
     opacity: f32,
+    /// Per final column: (low-res x0, x1, weight).
+    xt: Vec<(u32, u32, f32)>,
+    /// Per final row: (low-res y0, y1, weight).
 }
 
 impl Shadow {
