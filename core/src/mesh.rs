@@ -246,7 +246,7 @@ pub fn build(d: &Device) -> Mesh {
     let b = &d.body;
     let ppm = d.derived().ppm;
     let ident = Xf { ex: [1.0, 0.0, 0.0], ey: [0.0, 1.0, 0.0], ez: [0.0, 0.0, 1.0], o: [0.0, 0.0, 0.0] };
-    let front = |hw: f32, hh: f32, depth: f32| Extrusion { hw, hh, r: b.corner_r, depth, e: b.edge_r, front: Mat::Front, uv_scale: ppm, flip_v: true };
+    let front = |hw: f32, hh: f32, depth: f32| Extrusion { hw, hh, r: d.corner_r_3d(), depth, e: b.edge_r, front: Mat::Front, uv_scale: ppm, flip_v: true };
     match d.kind {
         Kind::Phone | Kind::Tablet => {
             m.extrude(&front(b.w / 2.0, b.h / 2.0, b.d), &ident);
