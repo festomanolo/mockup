@@ -84,6 +84,7 @@ try {
   const probe = execFileSync("python3", ["-c", `
 from PIL import Image
 im = Image.open(r"${join(out, "x", first)}").convert("RGBA"); w, h = im.size
+a = im.getchannel("A")
   if (errors.length) throw new Error("console errors: " + errors.join(" | "));
   console.log("E2E OK ->", out);
 } catch (e) {
