@@ -88,6 +88,7 @@ a = im.getchannel("A")
 semi = sum(1 for v in a.getdata() if 0 < v < 255)
 print(w, h, im.getpixel((2, 2)), semi)
 `]).toString().trim();
+  console.log("export probe (w h corner semi-transparent px):", probe);
   if (errors.length) throw new Error("console errors: " + errors.join(" | "));
   console.log("E2E OK ->", out);
 } catch (e) {
