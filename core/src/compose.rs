@@ -131,8 +131,6 @@ fn box_blur(buf: &mut [f32], w: usize, h: usize, r: usize) {
 
 struct Shadow {
     lw: usize,
-    lh: usize,
-    f: f32,
     a: Vec<f32>,
     opacity: f32,
 }
