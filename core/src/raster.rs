@@ -6,6 +6,7 @@
 
 use crate::front::{sd_rrect, FrontSpec};
 use crate::mesh::{dot, norm, Mat, Mesh, M3, V3};
+use crate::wall::Wall;
 
 const SS: usize = 2;
 const TS: usize = 32; // tile size in output pixels
