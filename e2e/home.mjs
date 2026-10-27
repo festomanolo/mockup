@@ -1,0 +1,13 @@
+import puppeteer from "puppeteer-core";
+import { spawn } from "node:child_process";
+const server = spawn("npx", ["vite", "preview", "--port", "5187", "--strictPort"], { cwd: "../web", stdio: "ignore" });
+await new Promise((r) => setTimeout(r, 2500));
+const b = await puppeteer.launch({ executablePath: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", headless: true });
+const p = await b.newPage();
+const errs = []; p.on("pageerror", (e) => errs.push(String(e))); p.on("console", (m) => m.type() === "error" && errs.push(m.text()));
+await p.setViewport({ width: 1300, height: 1500 });
+await p.goto("http://localhost:5187/");
+await p.waitForFunction(() => [...document.querySelectorAll(".card canvas")].filter((c) => !(c.width === 300 && c.height === 150)).length === 13, { timeout: 60000 });
+await p.screenshot({ path: process.argv[2] });
+console.log("cards:", await p.$$eval(".card", (c) => c.length), "errors:", errs);
+await b.close(); server.kill();

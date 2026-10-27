@@ -1,0 +1,91 @@
+:root {
+  --bg: #f6f7f9; --panel: #fff; --ink: #14161a; --muted: #6a707b; --line: #e3e6ea;
+  --accent: #2b6cff; --accent-ink: #fff; --check: #e9ecf0;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0f1114; --panel: #171a1f; --ink: #eceef2; --muted: #8b93a1; --line: #262b33; --check: #1d2128; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+a { color: inherit; text-decoration: none; }
+header.top { display: flex; align-items: center; gap: 16px; padding: 14px 24px; border-bottom: 1px solid var(--line); background: var(--panel); }
+header.top .brand { font-weight: 700; letter-spacing: -.02em; font-size: 18px; }
+header.top .note { margin-left: auto; color: var(--muted); font-size: 13px; }
+main { max-width: 1100px; margin: 0 auto; padding: 28px 24px 64px; }
+h1 { font-size: 28px; letter-spacing: -.02em; margin: 0 0 6px; }
+h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 28px 0 10px; font-weight: 600; }
+.sub { color: var(--muted); margin: 0 0 20px; }
+.tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 18px; }
+input[type=search], select { font: inherit; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); }
+input[type=search] { min-width: 240px; }
+.chip { border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 99px; padding: 6px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+.chip[aria-pressed=true] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; }
+.card { display: block; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; text-align: center; transition: transform .15s, border-color .15s; }
+.card:hover { transform: translateY(-2px); border-color: var(--accent); }
+.card canvas { height: 220px; max-width: 100%; object-fit: contain; }
+.card .n { font-weight: 600; margin-top: 8px; }
+.card .m { color: var(--muted); font-size: 12px; }
+.layout { display: grid; grid-template-columns: minmax(280px, 380px) 1fr; gap: 28px; align-items: start; }
+@media (max-width: 800px) { .layout { grid-template-columns: 1fr; } }
+.drop { border: 2px dashed var(--line); border-radius: 14px; padding: 26px 16px; text-align: center; background: var(--panel); cursor: pointer; transition: border-color .15s, background .15s; }
+.drop.over, .drop:hover { border-color: var(--accent); }
+.drop strong { display: block; }
+.drop small { color: var(--muted); }
+.drop .thumb { max-height: 90px; max-width: 100%; border-radius: 6px; margin-bottom: 8px; }
+.swatches { display: flex; gap: 10px; flex-wrap: wrap; }
+.sw { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 99px; padding: 5px 12px 5px 6px; font: inherit; font-size: 13px; cursor: pointer; }
+.sw i { width: 18px; height: 18px; border-radius: 50%; border: 1px solid rgba(0,0,0,.2); }
+.sw[aria-pressed=true] { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent); }
+.orients { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.ori { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 4px 6px; cursor: pointer; font: inherit; color: var(--ink); font-size: 12px; text-transform: capitalize; }
+.ori canvas { width: 100%; height: 84px; object-fit: contain; display: block; margin-bottom: 4px; }
+.ori[aria-pressed=true] { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent); }
+.row { display: flex; gap: 8px; flex-wrap: wrap; }
+button.primary { width: 100%; margin-top: 22px; padding: 13px; border: 0; border-radius: 10px; background: var(--accent); color: var(--accent-ink); font: inherit; font-weight: 600; cursor: pointer; }
+button.primary:disabled { opacity: .6; cursor: progress; }
+.status { min-height: 22px; margin-top: 8px; font-size: 13px; color: var(--muted); }
+.status.err { color: #d64545; }
+.stage { background: repeating-conic-gradient(var(--check) 0 25%, transparent 0 50%) 0 0 / 20px 20px; border: 1px solid var(--line); border-radius: 14px; min-height: 420px; display: grid; place-items: center; padding: 20px; position: sticky; top: 16px; }
+.stage canvas { max-width: 100%; max-height: 74vh; }
+.fullDrop { position: fixed; inset: 0; background: color-mix(in srgb, var(--accent) 18%, transparent); border: 3px dashed var(--accent); display: none; place-items: center; font-size: 24px; font-weight: 700; z-index: 9; pointer-events: none; }
+.fullDrop.on { display: grid; }
+footer { color: var(--muted); font-size: 12px; text-align: center; padding: 24px; }
+.gap { height: 14px; }
+
+/* ---- device page (MockUPhone-style layout) ---- */
+body { background: #efefee; }
+.layout { grid-template-columns: 1fr 450px; gap: 24px; }
+@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+.back { color: var(--muted); font-size: 13px; display: inline-block; margin-bottom: 12px; }
+.stagecard { background: #fff; border-radius: 12px; display: grid; place-items: center; padding: 40px 20px; min-height: 640px; position: sticky; top: 16px; }
+.stagewrap { position: relative; display: inline-grid; }
+.stagewrap canvas { max-width: 100%; max-height: 78vh; background: none; }
+.hint { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; color: #a3a3a3; font-weight: 700; font-size: clamp(20px, 3vw, 30px); line-height: 1.5; pointer-events: none; }
+.pcard { background: #fff; border-radius: 12px; padding: 18px 20px; margin-bottom: 18px; }
+.pcard h2 { margin: 0 0 12px; color: #1a1a1a; font-size: 13px; letter-spacing: .04em; }
+.side .drop { border: 2px dashed #0b46f0; background: #f2f5ff; color: #0b46f0; border-radius: 14px; padding: 26px 12px; }
+.drop.over, .drop:hover { background: #e6ecff; border-color: #0b46f0; }
+.drop .cloud svg { fill: none; stroke: #0b46f0; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.drop strong { font-size: 14px; }
+.drop u { font-size: 12px; }
+.fine { color: #8a8a8a; font-size: 11px; margin: 12px 0 0; }
+.shots { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.shot { position: relative; width: 56px; height: 72px; border: 2px solid transparent; border-radius: 8px; overflow: hidden; background: #eee; cursor: pointer; }
+.shot[aria-pressed=true] { border-color: #0b46f0; }
+.shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.shot .rm { position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; border: 0; border-radius: 50%; background: rgba(0,0,0,.6); color: #fff; font-size: 13px; line-height: 1; cursor: pointer; padding: 0; }
+.cname { color: #1a1a1a; margin-bottom: 10px; }
+.swatches { display: flex; gap: 10px; flex-wrap: wrap; }
+.dot { width: 40px; height: 40px; border-radius: 50%; border: 0; background: var(--c); cursor: pointer; box-shadow: inset 0 0 0 1px rgba(0,0,0,.15); }
+.dot[aria-pressed=true] { outline: 3px solid #0b46f0; outline-offset: 2px; }
+button.primary { background: #bdbdbd; color: #fff; border-radius: 99px; margin-top: 22px; }
+button.primary:not(:disabled) { background: #0b46f0; }
+button.primary:disabled { opacity: 1; cursor: not-allowed; }
+.orients { display: flex; gap: 18px; }
+.ori { background: none; border: 0; padding: 4px; width: 64px; height: 64px; border-radius: 10px; cursor: pointer; }
+.ori svg { width: 100%; height: 100%; fill: none; stroke: #777; stroke-width: 1.5; stroke-linejoin: round; }
+.ori[aria-pressed=true] { background: #eef2ff; box-shadow: inset 0 0 0 2px #0b46f0; }
+.ori[aria-pressed=true] svg { stroke: #0b46f0; }
+@media (prefers-color-scheme: dark) { body { background: #0f1114; } .stagecard, .pcard { background: #171a1f; } .pcard h2, .cname { color: #eceef2; } .hint { color: #5d6573; } .ori svg { stroke: #8b93a1; } }

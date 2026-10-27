@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# `mockup` — build (first run / when sources changed) and serve the app, then open it in the browser.
+# Usage: mockup [--port N] [--no-open] [--rebuild]
+set -euo pipefail
+src="${BASH_SOURCE[0]}"
+while [ -L "$src" ]; do
+  dir="$(cd -P "$(dirname "$src")" && pwd)"; src="$(readlink "$src")"; [[ $src != /* ]] && src="$dir/$src"
+done
+root="$(cd -P "$(dirname "$src")/.." && pwd)"
+export PATH="$HOME/.cargo/bin:$PATH"
+
+port=5173; open=1; rebuild=0
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --port) port="$2"; shift 2 ;;
+    --no-open) open=0; shift ;;
+    --rebuild) rebuild=1; shift ;;
+    -h|--help) sed -n '2,3p' "$src"; exit 0 ;;
+    *) echo "unknown option: $1" >&2; exit 2 ;;
+  esac
+done
+
+stamp="$root/web/dist/index.html"
+stale=$rebuild
+[ -f "$stamp" ] || stale=1
+if [ "$stale" = 0 ] && [ -n "$(find "$root/core/src" "$root/core/devices.json" "$root/web/src" "$root/web/index.html" -newer "$stamp" -type f ! -path '*/wasm/*' 2>/dev/null | head -1)" ]; then stale=1; fi
+
+if [ "$stale" = 1 ]; then
+  echo "mockup: building…" >&2
+  "$root/scripts/build-wasm.sh" >&2
+  (cd "$root/web" && { [ -d node_modules ] || npm install --silent >&2; } && npm run build --silent >&2)
+fi
+
+url="http://localhost:$port/"
+echo "mockup: serving $url (Ctrl+C to stop)" >&2
+[ "$open" = 1 ] && { (sleep 1; { open "$url" || xdg-open "$url"; } >/dev/null 2>&1) & }
+cd "$root/web" && exec npx vite preview --port "$port" --strictPort

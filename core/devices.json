@@ -1,0 +1,1178 @@
+{
+ "version": 2,
+ "devices": [
+  {
+   "id": "galaxy-s24-ultra",
+   "brand": "Samsung",
+   "name": "Galaxy S24 Ultra",
+   "category": "Samsung Galaxy",
+   "year": 2024,
+   "kind": "phone",
+   "body": {
+    "w": 79.0,
+    "h": 162.3,
+    "d": 8.6,
+    "corner_r": 1.0,
+    "edge_r": 0.3,
+    "frame": 1.2
+   },
+   "screen": {
+    "w": 1440,
+    "h": 3120,
+    "diag_in": 6.8,
+    "radius_mm": 0.5
+   },
+   "camera": {
+    "kind": "punch",
+    "y": 3.3,
+    "r": 1.5
+   },
+   "finishes": [
+    {
+     "name": "Titanium Gray",
+     "color": "#b5ab9f"
+    },
+    {
+     "name": "Titanium Black",
+     "color": "#3b3b3d"
+    },
+    {
+     "name": "Titanium Violet",
+     "color": "#a79fb5"
+    },
+    {
+     "name": "Titanium Yellow",
+     "color": "#dbd0a4"
+    }
+   ],
+   "orientations": [
+    "portrait",
+    "landscape",
+    "right",
+    "left"
+   ],
+   "sources": [
+    {
+     "field": "body.w/h/d",
+     "status": "fetched",
+     "url": "https://www.gsmarena.com/samsung_galaxy_s24_ultra-12771.php"
+    },
+    {
+     "field": "screen.w/h/diag_in",
+     "status": "fetched",
+     "url": "https://www.gsmarena.com/samsung_galaxy_s24_ultra-12771.php"
+    },
+    {
+     "field": "body.corner_r",
+     "status": "derived",
+     "note": "Measured from a MockUPhone S24 Ultra export (corner ~0.5-1 mm, rim ~1.2-1.5 mm)."
+    },
+    {
+     "field": "body.edge_r",
+     "status": "derived",
+     "note": "Measured from a MockUPhone S24 Ultra export (corner ~0.5-1 mm, rim ~1.2-1.5 mm)."
+    },
+    {
+     "field": "body.frame",
+     "status": "derived",
+     "note": "Measured from a MockUPhone S24 Ultra export (corner ~0.5-1 mm, rim ~1.2-1.5 mm)."
+    },
+    {
+     "field": "screen.radius_mm",
+     "status": "derived",
+     "note": "Measured from a MockUPhone S24 Ultra export (corner ~0.5-1 mm, rim ~1.2-1.5 mm)."
+    },
+    {
+     "field": "camera",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "finishes",
+     "status": "estimated",
+     "note": "Colour values approximated from marketing names."
+    }
+   ]
+  },
+  {
+   "id": "galaxy-s24",
+   "brand": "Samsung",
+   "name": "Galaxy S24",
+   "category": "Samsung Galaxy",
+   "year": 2024,
+   "kind": "phone",
+   "body": {
+    "w": 70.6,
+    "h": 147.0,
+    "d": 7.6,
+    "corner_r": 9.0,
+    "edge_r": 0.5,
+    "frame": 0.9
+   },
+   "screen": {
+    "w": 1080,
+    "h": 2340,
+    "diag_in": 6.2,
+    "radius_mm": 2.0
+   },
+   "camera": {
+    "kind": "punch",
+    "y": 2.9,
+    "r": 1.3
+   },
+   "finishes": [
+    {
+     "name": "Onyx Black",
+     "color": "#303134"
+    },
+    {
+     "name": "Marble Gray",
+     "color": "#b9bbbf"
+    },
+    {
+     "name": "Amber Yellow",
+     "color": "#dcc88a"
+    },
+    {
+     "name": "Cobalt Violet",
+     "color": "#9b8fc4"
+    }
+   ],
+   "orientations": [
+    "portrait",
+    "landscape",
+    "right",
+    "left"
+   ],
+   "sources": [
+    {
+     "field": "body.w/h/d",
+     "status": "fetched",
+     "url": "https://www.gsmarena.com/samsung_galaxy_s24-12773.php"
+    },
+    {
+     "field": "screen.w/h/diag_in",
+     "status": "fetched",
+     "url": "https://www.gsmarena.com/samsung_galaxy_s24-12773.php"
+    },
+    {
+     "field": "body.corner_r",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "body.edge_r",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "body.frame",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "screen.radius_mm",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "camera",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "finishes",
+     "status": "estimated",
+     "note": "Colour values approximated from marketing names."
+    }
+   ]
+  },
+  {
+   "id": "iphone-15-pro",
+   "brand": "Apple",
+   "name": "iPhone 15 Pro",
+   "category": "Apple iPhone",
+   "year": 2023,
+   "kind": "phone",
+   "body": {
+    "w": 70.6,
+    "h": 146.6,
+    "d": 8.3,
+    "corner_r": 10.5,
+    "edge_r": 0.8,
+    "frame": 0.5
+   },
+   "screen": {
+    "w": 1179,
+    "h": 2556,
+    "diag_in": 6.1,
+    "radius_mm": 7.0
+   },
+   "camera": {
+    "kind": "island",
+    "y": 1.8,
+    "w": 20.4,
+    "h": 6.1
+   },
+   "finishes": [
+    {
+     "name": "Natural Titanium",
+     "color": "#a9a396"
+    },
+    {
+     "name": "Blue Titanium",
+     "color": "#51596a"
+    },
+    {
+     "name": "White Titanium",
+     "color": "#d8d7d2"
+    },
+    {
+     "name": "Black Titanium",
+     "color": "#3b3b3e"
+    }
+   ],
+   "orientations": [
+    "portrait",
+    "landscape",
+    "right",
+    "left"
+   ],
+   "sources": [
+    {
+     "field": "body.w/h/d",
+     "status": "fetched",
+     "url": "https://www.gsmarena.com/apple_iphone_15_pro-12557.php"
+    },
+    {
+     "field": "screen.w/h/diag_in",
+     "status": "fetched",
+     "url": "https://www.gsmarena.com/apple_iphone_15_pro-12557.php"
+    },
+    {
+     "field": "body.corner_r",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "body.edge_r",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "body.frame",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "screen.radius_mm",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "camera",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "finishes",
+     "status": "estimated",
+     "note": "Colour values approximated from marketing names."
+    }
+   ]
+  },
+  {
+   "id": "pixel-8-pro",
+   "brand": "Google",
+   "name": "Pixel 8 Pro",
+   "category": "Google Pixel",
+   "year": 2023,
+   "kind": "phone",
+   "body": {
+    "w": 76.5,
+    "h": 162.6,
+    "d": 8.8,
+    "corner_r": 9.0,
+    "edge_r": 1.0,
+    "frame": 0.5
+   },
+   "screen": {
+    "w": 1344,
+    "h": 2992,
+    "diag_in": 6.7,
+    "radius_mm": 2.0
+   },
+   "camera": {
+    "kind": "punch",
+    "y": 3.0,
+    "r": 1.3
+   },
+   "finishes": [
+    {
+     "name": "Obsidian",
+     "color": "#2f3033"
+    },
+    {
+     "name": "Porcelain",
+     "color": "#d9d4cc"
+    },
+    {
+     "name": "Bay",
+     "color": "#9fb7c8"
+    }
+   ],
+   "orientations": [
+    "portrait",
+    "landscape",
+    "right",
+    "left"
+   ],
+   "sources": [
+    {
+     "field": "body.w/h/d",
+     "status": "fetched",
+     "url": "https://www.gsmarena.com/google_pixel_8_pro-12545.php"
+    },
+    {
+     "field": "screen.w/h/diag_in",
+     "status": "fetched",
+     "url": "https://www.gsmarena.com/google_pixel_8_pro-12545.php"
+    },
+    {
+     "field": "body.corner_r",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "body.edge_r",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "body.frame",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "screen.radius_mm",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "camera",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "finishes",
+     "status": "estimated",
+     "note": "Colour values approximated from marketing names."
+    }
+   ]
+  },
+  {
+   "id": "ipad-pro-11",
+   "brand": "Apple",
+   "name": "iPad Pro 11\" (M5)",
+   "category": "iPad",
+   "year": 2026,
+   "kind": "phone",
+   "body": {
+    "w": 177.5,
+    "h": 249.7,
+    "d": 5.3,
+    "corner_r": 6.0,
+    "edge_r": 0.5,
+    "frame": 0.4
+   },
+   "screen": {
+    "w": 1668,
+    "h": 2420,
+    "diag_in": 11.1,
+    "radius_mm": 1.0
+   },
+   "camera": {
+    "kind": "none"
+   },
+   "finishes": [
+    {
+     "name": "Space Black",
+     "color": "#4a4b4f"
+    },
+    {
+     "name": "Silver",
+     "color": "#d6d7da"
+    }
+   ],
+   "orientations": [
+    "portrait",
+    "landscape",
+    "right",
+    "left"
+   ],
+   "sources": [
+    {
+     "field": "body.w/h/d",
+     "status": "fetched",
+     "url": "https://www.apple.com/ipad-pro/specs/"
+    },
+    {
+     "field": "screen.w/h/diag_in",
+     "status": "fetched",
+     "url": "https://www.apple.com/ipad-pro/specs/",
+     "note": "Apple lists 2420 x 1668 at 264 ppi; 11.1 in is the measured rectangle diagonal."
+    },
+    {
+     "field": "body.corner_r",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "body.edge_r",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "body.frame",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "screen.radius_mm",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "camera",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "finishes",
+     "status": "estimated",
+     "note": "Colour values approximated from marketing names."
+    }
+   ]
+  },
+  {
+   "id": "generic-phone",
+   "brand": "Generic",
+   "name": "Generic Phone",
+   "category": "Generic",
+   "year": 0,
+   "kind": "phone",
+   "body": {
+    "w": 72.0,
+    "h": 155.0,
+    "d": 8.0,
+    "corner_r": 7.0,
+    "edge_r": 0.6,
+    "frame": 0.6
+   },
+   "screen": {
+    "w": 1080,
+    "h": 2400,
+    "diag_in": 6.5,
+    "radius_mm": 1.5
+   },
+   "camera": {
+    "kind": "punch",
+    "y": 2.8,
+    "r": 1.2
+   },
+   "finishes": [
+    {
+     "name": "Graphite",
+     "color": "#3a3c40"
+    },
+    {
+     "name": "Silver",
+     "color": "#cfd1d5"
+    },
+    {
+     "name": "Rose",
+     "color": "#d9a9a4"
+    }
+   ],
+   "orientations": [
+    "portrait",
+    "landscape",
+    "right",
+    "left"
+   ],
+   "sources": [
+    {
+     "field": "all",
+     "status": "generic",
+     "note": "Original generic phone; not a specific commercial model."
+    }
+   ]
+  },
+  {
+   "id": "generic-tablet",
+   "brand": "Generic",
+   "name": "Generic Tablet",
+   "category": "Generic",
+   "year": 0,
+   "kind": "tablet",
+   "body": {
+    "w": 165.0,
+    "h": 250.0,
+    "d": 7.0,
+    "corner_r": 5.0,
+    "edge_r": 0.5,
+    "frame": 0.5
+   },
+   "screen": {
+    "w": 1600,
+    "h": 2560,
+    "diag_in": 10.5,
+    "radius_mm": 1.0
+   },
+   "camera": {
+    "kind": "none"
+   },
+   "finishes": [
+    {
+     "name": "Graphite",
+     "color": "#3a3c40"
+    },
+    {
+     "name": "Silver",
+     "color": "#cfd1d5"
+    }
+   ],
+   "orientations": [
+    "portrait",
+    "landscape",
+    "right",
+    "left"
+   ],
+   "sources": [
+    {
+     "field": "all",
+     "status": "generic",
+     "note": "Original generic tablet; not a specific commercial model."
+    }
+   ]
+  },
+  {
+   "id": "macbook-pro-14",
+   "brand": "Apple",
+   "name": "MacBook Pro 14\"",
+   "category": "MacBook Pro",
+   "year": 2023,
+   "kind": "laptop",
+   "body": {
+    "w": 312.6,
+    "h": 221.2,
+    "d": 15.5,
+    "corner_r": 8.0,
+    "edge_r": 0.6,
+    "frame": 0.0
+   },
+   "screen": {
+    "w": 3024,
+    "h": 1964,
+    "diag_in": 14.2,
+    "radius_mm": 1.2,
+    "dy": -3.15
+   },
+   "camera": {
+    "kind": "notch",
+    "w": 14.5,
+    "h": 4.2
+   },
+   "laptop": {
+    "lid_t": 4.6,
+    "open_deg": 106.0
+   },
+   "finishes": [
+    {
+     "name": "Silver",
+     "color": "#d5d6d8"
+    },
+    {
+     "name": "Space Gray",
+     "color": "#7d7e80"
+    },
+    {
+     "name": "Space Black",
+     "color": "#3a3b3e"
+    }
+   ],
+   "orientations": [
+    "front",
+    "right",
+    "left"
+   ],
+   "sources": [
+    {
+     "field": "body.w/h/d",
+     "status": "fetched",
+     "url": "https://www.apple.com/macbook-pro/specs/",
+     "note": "Dimensions: 312.6 x 221.2 x 15.5 mm"
+    },
+    {
+     "field": "screen.w/h/diag_in",
+     "status": "fetched",
+     "url": "https://www.apple.com/macbook-pro/specs/"
+    },
+    {
+     "field": "body.corner_r",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "body.edge_r",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "screen.dy",
+     "status": "estimated",
+     "note": "Top/bottom bezel split."
+    },
+    {
+     "field": "laptop.lid_t",
+     "status": "estimated",
+     "note": "Lid/base thickness split is not published."
+    },
+    {
+     "field": "laptop.open_deg",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "camera",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "finishes",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    }
+   ]
+  },
+  {
+   "id": "macbook-pro-16",
+   "brand": "Apple",
+   "name": "MacBook Pro 16\"",
+   "category": "MacBook Pro",
+   "year": 2023,
+   "kind": "laptop",
+   "body": {
+    "w": 355.7,
+    "h": 248.1,
+    "d": 16.8,
+    "corner_r": 8.0,
+    "edge_r": 0.6,
+    "frame": 0.0
+   },
+   "screen": {
+    "w": 3456,
+    "h": 2234,
+    "diag_in": 16.2,
+    "radius_mm": 1.2,
+    "dy": -3.15
+   },
+   "camera": {
+    "kind": "notch",
+    "w": 14.5,
+    "h": 4.2
+   },
+   "laptop": {
+    "lid_t": 4.8,
+    "open_deg": 106.0
+   },
+   "finishes": [
+    {
+     "name": "Silver",
+     "color": "#d5d6d8"
+    },
+    {
+     "name": "Space Gray",
+     "color": "#7d7e80"
+    },
+    {
+     "name": "Space Black",
+     "color": "#3a3b3e"
+    }
+   ],
+   "orientations": [
+    "front",
+    "right",
+    "left"
+   ],
+   "sources": [
+    {
+     "field": "body.w/h/d",
+     "status": "fetched",
+     "url": "https://www.apple.com/macbook-pro/specs/",
+     "note": "Dimensions: 355.7 x 248.1 x 16.8 mm"
+    },
+    {
+     "field": "screen.w/h/diag_in",
+     "status": "fetched",
+     "url": "https://www.apple.com/macbook-pro/specs/"
+    },
+    {
+     "field": "body.corner_r",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "body.edge_r",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "screen.dy",
+     "status": "estimated",
+     "note": "Top/bottom bezel split."
+    },
+    {
+     "field": "laptop.lid_t",
+     "status": "estimated",
+     "note": "Lid/base thickness split is not published."
+    },
+    {
+     "field": "laptop.open_deg",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "camera",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "finishes",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    }
+   ]
+  },
+  {
+   "id": "macbook-air-13",
+   "brand": "Apple",
+   "name": "MacBook Air 13\"",
+   "category": "MacBook Air",
+   "year": 2024,
+   "kind": "laptop",
+   "body": {
+    "w": 304.1,
+    "h": 215.0,
+    "d": 11.3,
+    "corner_r": 8.0,
+    "edge_r": 0.6,
+    "frame": 0.0
+   },
+   "screen": {
+    "w": 2560,
+    "h": 1664,
+    "diag_in": 13.6,
+    "radius_mm": 1.2,
+    "dy": -3.0
+   },
+   "camera": {
+    "kind": "notch",
+    "w": 14.5,
+    "h": 4.2
+   },
+   "laptop": {
+    "lid_t": 3.8,
+    "open_deg": 106.0
+   },
+   "finishes": [
+    {
+     "name": "Silver",
+     "color": "#dcdcdf"
+    },
+    {
+     "name": "Starlight",
+     "color": "#e3dfd6"
+    },
+    {
+     "name": "Space Gray",
+     "color": "#82838a"
+    },
+    {
+     "name": "Midnight",
+     "color": "#2e3642"
+    }
+   ],
+   "orientations": [
+    "front",
+    "right",
+    "left"
+   ],
+   "sources": [
+    {
+     "field": "body.w/h/d",
+     "status": "fetched",
+     "url": "https://www.apple.com/macbook-air/specs/",
+     "note": "Dimensions: 304.1 x 215 x 11.3 mm"
+    },
+    {
+     "field": "screen.w/h/diag_in",
+     "status": "fetched",
+     "url": "https://www.apple.com/macbook-air/specs/"
+    },
+    {
+     "field": "body.corner_r",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "body.edge_r",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "screen.dy",
+     "status": "estimated",
+     "note": "Top/bottom bezel split."
+    },
+    {
+     "field": "laptop.lid_t",
+     "status": "estimated",
+     "note": "Lid/base thickness split is not published."
+    },
+    {
+     "field": "laptop.open_deg",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "camera",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "finishes",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    }
+   ]
+  },
+  {
+   "id": "macbook-air-15",
+   "brand": "Apple",
+   "name": "MacBook Air 15\"",
+   "category": "MacBook Air",
+   "year": 2024,
+   "kind": "laptop",
+   "body": {
+    "w": 340.4,
+    "h": 237.6,
+    "d": 11.5,
+    "corner_r": 8.0,
+    "edge_r": 0.6,
+    "frame": 0.0
+   },
+   "screen": {
+    "w": 2880,
+    "h": 1864,
+    "diag_in": 15.3,
+    "radius_mm": 1.2,
+    "dy": -3.0
+   },
+   "camera": {
+    "kind": "notch",
+    "w": 14.5,
+    "h": 4.2
+   },
+   "laptop": {
+    "lid_t": 3.8,
+    "open_deg": 106.0
+   },
+   "finishes": [
+    {
+     "name": "Silver",
+     "color": "#dcdcdf"
+    },
+    {
+     "name": "Starlight",
+     "color": "#e3dfd6"
+    },
+    {
+     "name": "Space Gray",
+     "color": "#82838a"
+    },
+    {
+     "name": "Midnight",
+     "color": "#2e3642"
+    }
+   ],
+   "orientations": [
+    "front",
+    "right",
+    "left"
+   ],
+   "sources": [
+    {
+     "field": "body.w/h/d",
+     "status": "fetched",
+     "url": "https://www.apple.com/macbook-air/specs/",
+     "note": "Dimensions: 340.4 x 237.6 x 11.5 mm"
+    },
+    {
+     "field": "screen.w/h/diag_in",
+     "status": "fetched",
+     "url": "https://www.apple.com/macbook-air/specs/"
+    },
+    {
+     "field": "body.corner_r",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "body.edge_r",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "screen.dy",
+     "status": "estimated",
+     "note": "Top/bottom bezel split."
+    },
+    {
+     "field": "laptop.lid_t",
+     "status": "estimated",
+     "note": "Lid/base thickness split is not published."
+    },
+    {
+     "field": "laptop.open_deg",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "camera",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "finishes",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    }
+   ]
+  },
+  {
+   "id": "surface-laptop-13-5",
+   "brand": "Microsoft",
+   "name": "Surface Laptop 13.5\"",
+   "category": "Surface",
+   "year": 2022,
+   "kind": "laptop",
+   "body": {
+    "w": 308.0,
+    "h": 223.0,
+    "d": 14.5,
+    "corner_r": 7.0,
+    "edge_r": 0.6,
+    "frame": 0.0
+   },
+   "screen": {
+    "w": 2256,
+    "h": 1504,
+    "diag_in": 13.5,
+    "radius_mm": 1.2,
+    "dy": -2.0
+   },
+   "camera": {
+    "kind": "dot",
+    "y": 6.5,
+    "r": 1.0
+   },
+   "laptop": {
+    "lid_t": 5.5,
+    "open_deg": 106.0
+   },
+   "finishes": [
+    {
+     "name": "Platinum",
+     "color": "#c4c6c9"
+    },
+    {
+     "name": "Black",
+     "color": "#2f3033"
+    },
+    {
+     "name": "Sage",
+     "color": "#a9b5a5"
+    }
+   ],
+   "orientations": [
+    "front",
+    "right",
+    "left"
+   ],
+   "sources": [
+    {
+     "field": "body.w/h/d",
+     "status": "fetched",
+     "url": "https://nanoreview.net/en/laptop/microsoft-surface-laptop-5-13-5",
+     "note": "Dimensions 308 x 223 x 14.5 mm (Microsoft regional spec page, via search); 2256 x 1504 display."
+    },
+    {
+     "field": "screen.w/h/diag_in",
+     "status": "fetched",
+     "url": "https://www.microsoft.com/surface"
+    },
+    {
+     "field": "body.corner_r",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "body.edge_r",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "screen.dy",
+     "status": "estimated",
+     "note": "Top/bottom bezel split."
+    },
+    {
+     "field": "laptop.lid_t",
+     "status": "estimated",
+     "note": "Lid/base thickness split is not published."
+    },
+    {
+     "field": "laptop.open_deg",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "camera",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "finishes",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    }
+   ]
+  },
+  {
+   "id": "imac-24",
+   "brand": "Apple",
+   "name": "iMac 24\"",
+   "category": "iMac",
+   "year": 2023,
+   "kind": "imac",
+   "body": {
+    "w": 547.0,
+    "h": 365.0,
+    "d": 11.5,
+    "corner_r": 10.0,
+    "edge_r": 0.8,
+    "frame": 0.0
+   },
+   "screen": {
+    "w": 4480,
+    "h": 2520,
+    "diag_in": 23.5,
+    "radius_mm": 0.5,
+    "dy": -20.6
+   },
+   "camera": {
+    "kind": "dot",
+    "y": 7.0,
+    "r": 1.3
+   },
+   "bezel_color": "#f4f4f6",
+   "chin_colored": true,
+   "stand": {
+    "total_h": 461.0,
+    "foot_w": 130.0,
+    "foot_d": 147.0,
+    "foot_t": 6.5
+   },
+   "finishes": [
+    {
+     "name": "Silver",
+     "color": "#d9dadd"
+    },
+    {
+     "name": "Blue",
+     "color": "#7f9fc6"
+    },
+    {
+     "name": "Green",
+     "color": "#8fb59a"
+    },
+    {
+     "name": "Pink",
+     "color": "#e4b6b3"
+    },
+    {
+     "name": "Yellow",
+     "color": "#e8c96b"
+    },
+    {
+     "name": "Orange",
+     "color": "#e39a6a"
+    },
+    {
+     "name": "Purple",
+     "color": "#a59bc8"
+    }
+   ],
+   "orientations": [
+    "front",
+    "right",
+    "left"
+   ],
+   "sources": [
+    {
+     "field": "body.w, stand.total_h, stand.foot_w/foot_d",
+     "status": "fetched",
+     "url": "https://www.apple.com/imac/specs/",
+     "note": "Width 54.7 cm, height 46.1 cm, stand depth 14.7 cm, stand width 13 cm (Apple labels were out of order; matched in sequence)."
+    },
+    {
+     "field": "screen.w/h/diag_in",
+     "status": "fetched",
+     "url": "https://www.apple.com/imac/specs/",
+     "note": "4480 x 2520, actual diagonal 23.5 in"
+    },
+    {
+     "field": "body.h",
+     "status": "estimated",
+     "note": "Display-slab height (incl. chin) is not published."
+    },
+    {
+     "field": "body.d",
+     "status": "estimated",
+     "note": "Slab thickness is not on the spec page."
+    },
+    {
+     "field": "stand geometry",
+     "status": "estimated",
+     "note": "Neck and foot shape approximated."
+    },
+    {
+     "field": "body.corner_r",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "screen.dy",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    },
+    {
+     "field": "finishes",
+     "status": "estimated",
+     "note": "Not published; chosen to match the real product's appearance."
+    }
+   ]
+  }
+ ]
+}
