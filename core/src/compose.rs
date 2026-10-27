@@ -233,6 +233,10 @@ pub fn compose(dev: &[u8], w: u32, h: u32, s: &Style) -> Result<(Vec<u8>, u32, u
                 let i = ((y - pu) * wu + (x - pu)) * 4;
                 if dev[i + 3] == 255 {
                     let o = (y * fwu + x) * 4;
+                    out[o..o + 4].copy_from_slice(&dev[i..i + 4]); // fully covered: no background or shadow shows
+                    continue;
+                }
+            }
             // background (premultiplied)
             let t = (0.5 + ((x as f32 + 0.5 - cx) * dir.0 + (y as f32 + 0.5 - cy) * dir.1) / len).clamp(0.0, 1.0);
             let mut px = [0f32; 4];
