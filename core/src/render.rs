@@ -67,9 +67,10 @@ fn is_flat(d: &Device, o: Orientation) -> bool {
 /// Camera rotation for a given view. Angles are tuned so thickness reads clearly.
 fn camera(d: &Device, o: Orientation) -> Camera {
     let (rot, dist_k): (M3, f32) = match (d.kind, o) {
-        // phones/tablets lying on a desk, seen from above at an angle (like MockUPhone's tilted views)
-        (Kind::Phone | Kind::Tablet, Orientation::Right) => (mul_m(&rot_x(-0.95), &mul_m(&rot_z(0.62), &rot_y(0.0))), 9.0),
-        (Kind::Phone | Kind::Tablet, Orientation::Left) => (mul_m(&rot_x(-0.95), &mul_m(&rot_z(-0.62), &rot_y(0.0))), 9.0),
+        // phones/tablets lying on a desk, seen from above at an angle; fitted to MockUPhone's tilted
+        // exports (screen corners give rot_x -0.775, rot_z 0.615 and ~10x body length eye distance)
+        (Kind::Phone | Kind::Tablet, Orientation::Right) => (mul_m(&rot_x(-0.775), &rot_z(0.615)), 10.0),
+        (Kind::Phone | Kind::Tablet, Orientation::Left) => (mul_m(&rot_x(-0.775), &rot_z(-0.615)), 10.0),
         (_, Orientation::Right) => (mul_m(&rot_x(0.2), &rot_y(0.62)), 6.0),
         (_, Orientation::Left) => (mul_m(&rot_x(0.2), &rot_y(-0.62)), 6.0),
         _ => (rot_x(if d.kind == Kind::Imac { 0.05 } else { 0.2 }), 6.0),
