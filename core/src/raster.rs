@@ -135,6 +135,10 @@ pub struct Shading {
     pub metal: [f32; 3],
     /// Deck plane size in mm (width, depth).
     pub deck: (f32, f32),
+    /// Phones/tablets: detailed side walls instead of plain metal.
+    pub wall: Option<Wall>,
+    /// Size of one output pixel in mm (anti-aliasing width for wall details).
+    pub mm_per_px: f32,
 }
 
 const LIGHT: V3 = [-0.40, 0.62, 0.68];
@@ -190,7 +194,10 @@ fn shade_sample(t: &STri, l: [f32; 3], sh: &Shading) -> [f32; 3] {
     let b = t.persp(l);
     let n = t.normal_at(b);
     match t.mat {
-        Mat::Metal => metal(sh.metal, n),
+        Mat::Metal => match &sh.wall {
+            Some(w) => w.shade(lerp3(&t.mp, b), norm(lerp3(&t.mn, b)), sh.mm_per_px * 1.5),
+            None => metal(sh.metal, n),
+        },
         Mat::Front | Mat::Deck => {
             let uv = t.uv_at(b);
             let fp = t.fp;
