@@ -78,6 +78,7 @@ try {
   const want = ["shot_one", "second"].flatMap((base) => expected.map((o) => `${base}-${device}-${o}.png`)).sort();
   if (JSON.stringify([...list].sort()) !== JSON.stringify(want)) throw new Error("zip contents differ from expected: " + want.join(", "));
   execFileSync("unzip", ["-tq", join(out, zipName)], { stdio: "inherit" });
+  // inspect one exported PNG: with a background the corner is opaque, otherwise it is transparent with a soft shadow
   if (errors.length) throw new Error("console errors: " + errors.join(" | "));
   console.log("E2E OK ->", out);
 } catch (e) {
