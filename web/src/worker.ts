@@ -11,6 +11,8 @@ export type RenderRequest = {
   maxSide: number;
   native: boolean;
   imageId: number | null;
+  /** Background/padding/shadow as JSON (empty string = none); sizes include padding and shadow. */
+  style?: string;
   /** Source file; decoded here on a cache miss so only workers that render an image hold its pixels. */
   file?: File;
   /** When set the result is encoded in the worker and returned as a Blob. */
