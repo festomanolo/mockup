@@ -29,6 +29,7 @@ fn main() {
 fn dump(d: &mockup_core::manifest::Device, id: &str, dir: &str, scale: f32, img: &[u8], iw: u32, ih: u32) {
     let only = std::env::var("O").ok();
     for name in &d.orientations {
+        if only.as_deref().is_some_and(|o| o != name) { continue; }
         let o = Orientation::parse(name).unwrap();
         let t = std::time::Instant::now();
         let out = render(d, &Params { finish: 0, orientation: o, fit: Fit::Cover, scale, screenshot: Some(Image { rgba: &img, w: iw, h: ih }) }).unwrap();
