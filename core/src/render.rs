@@ -137,7 +137,8 @@ pub fn render(d: &Device, p: &Params) -> Result<Output, String> {
     }
     let mesh = mesh::build(d);
     let proj = project(&mesh, &camera(d, p.orientation), px_per_mm(d, p.scale), MAX_SIDE, MAX_PIXELS)?;
-    let shading = Shading { front: spec, metal, deck: (d.body.w, d.body.h) };
+    let wall = matches!(d.kind, Kind::Phone | Kind::Tablet).then(|| Wall::new(d, metal));
+    let shading = Shading { front: spec, metal, deck: (d.body.w, d.body.h), wall, mm_per_px: 1.0 / px_per_mm(d, p.scale) };
     let data = rasterize(&proj, &shading);
     Ok(Output { width: proj.width, height: proj.height, data })
 }
