@@ -8,6 +8,7 @@ pub mod manifest;
 pub mod mesh;
 pub mod raster;
 pub mod render;
+pub mod wall;
 
 #[cfg(feature = "wasm")]
 mod wasm {
