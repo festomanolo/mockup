@@ -1,6 +1,7 @@
 //! mockup-core: device manifest + software renderer. Compiled natively for tests
 //! and to WebAssembly (feature `wasm`) for the browser.
 
+pub mod compose;
 pub mod front;
 pub mod geometry;
 pub mod manifest;
