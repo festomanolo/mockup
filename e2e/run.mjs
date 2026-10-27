@@ -80,6 +80,7 @@ try {
   execFileSync("unzip", ["-tq", join(out, zipName)], { stdio: "inherit" });
   // inspect one exported PNG: with a background the corner is opaque, otherwise it is transparent with a soft shadow
   const first = list.find((n) => n.startsWith("second-"));
+  execFileSync("unzip", ["-o", "-q", join(out, zipName), first, "-d", join(out, "x")]);
   if (errors.length) throw new Error("console errors: " + errors.join(" | "));
   console.log("E2E OK ->", out);
 } catch (e) {
