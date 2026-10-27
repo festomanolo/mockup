@@ -10,6 +10,13 @@ fn main() {
     let m = bundled();
     let d = find(&m, &id).expect("device");
     // optional screenshot: PPM-less synthetic stripes so the screen is recognisable
+    // SHOT=<raw rgba file> SW=<w> SH=<h> uses a real screenshot instead
+    if let Ok(path) = std::env::var("SHOT") {
+        let img = std::fs::read(path).unwrap();
+        let iw: u32 = std::env::var("SW").unwrap().parse().unwrap();
+        let ih: u32 = std::env::var("SH").unwrap().parse().unwrap();
+        return dump(d, &id, &dir, scale, &img, iw, ih);
+    }
     let (iw, ih) = (200u32, (200.0 * d.screen.h as f32 / d.screen.w as f32) as u32);
     let mut img = vec![255u8; (iw * ih * 4) as usize];
     for y in 0..ih { for x in 0..iw {
