@@ -187,7 +187,7 @@ fn build_shadow(dev: &[u8], w: usize, h: usize, p: usize, fw: usize, fh: usize, 
     for _ in 0..3 {
         box_blur(&mut a, lw, lh, r);
     }
-    Shadow { lw, lh, f, a, opacity: (layer.2 * strength / 0.6).clamp(0.0, 0.9) }
+    Shadow { lw, a, opacity: (layer.2 * strength / 0.6).clamp(0.0, 0.9), xt: axis_table(fw, f, lw), yt: axis_table(fh, f, lh) }
 }
 
 #[inline]
