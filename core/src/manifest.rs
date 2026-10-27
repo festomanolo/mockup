@@ -50,6 +50,53 @@ pub struct Device {
     pub sources: Vec<Source>,
 }
 
+#[derive(Debug, Clone, Default, Deserialize)]
+pub struct Details {
+    /// Bezel drawn as dark-grey cover glass with black hairlines instead of flat black.
+    #[serde(default)]
+    pub glass_edge: bool,
+    /// Openings on the bottom wall, x measured from the centre (seen from the front, +x right).
+    #[serde(default)]
+    pub ports: Vec<Port>,
+    #[serde(default)]
+    pub bands: Bands,
+    /// Draw the side buttons on the right wall instead of modelling them as boxes.
+    #[serde(default)]
+    pub wall_buttons: bool,
+    /// Plan-view corner radius of the 3D model when it differs from the flat outline, mm.
+    #[serde(default)]
+    pub corner_r_3d: Option<f32>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PortKind {
+    UsbC,
+    Slot,
+    Hole,
+    Tray,
+    Spen,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct Port {
+    pub kind: PortKind,
+    pub x: f32,
+    pub w: f32,
+    pub h: f32,
+}
+
+/// Antenna split lines: x positions on the bottom/top walls, distance from the top on the long sides.
+#[derive(Debug, Clone, Default, Deserialize)]
+pub struct Bands {
+    #[serde(default)]
+    pub bottom: Vec<f32>,
+    #[serde(default)]
+    pub top: Vec<f32>,
+    #[serde(default)]
+    pub side: Vec<f32>,
+}
+
 /// Outer body of the phone/tablet, or the lid / display slab for laptops and iMacs.
 /// For laptops `h` is the lid height (= base depth) and `d` the closed total thickness.
 #[derive(Debug, Clone, Deserialize)]
