@@ -349,6 +349,9 @@ function devicePage(d: Device) {
     card("File upload", drop, file, hintTxt, list),
     el("section", { class: "pcard" }, el("h2", {}, "Color"), colorName, sw, gen, status),
     card("Device orientations", ori),
+    card("Background & shadow", bgRow,
+      el("div", { class: "row tight" }, el("span", { class: "fine" }, "Custom gradient"), fromIn, toIn, angleSel),
+      el("div", { class: "row" }, padSel, shadowSel), el("label", { class: "fine range" }, "Shadow strength", strength)),
     card("Options", el("div", { class: "row" }, fit, fmt, quality)),
     specs(d));
   shell(el("div", {}, el("a", { href: "/", class: "back", textContent: "← All devices" }),
