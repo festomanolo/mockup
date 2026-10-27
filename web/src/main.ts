@@ -158,7 +158,7 @@ function devicePage(d: Device) {
   document.title = `${d.name} mockup – Mockup`;
   const st = {
     finish: 0, fit: "cover" as string, view: d.orientations[0],
-    shots: [] as Shot[], active: -1,
+    shots: [] as Shot[], active: -1, style: loadStyle(),
   };
   let token = 0;
 
