@@ -245,6 +245,7 @@ impl FrontSpec {
             cam,
             rim: flat,
             shot,
+            glass: d.details.glass_edge.then_some(ppm),
         })
     }
 
