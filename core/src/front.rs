@@ -182,6 +182,8 @@ pub struct FrontSpec {
     safe_hw: f32,
     safe_hh: f32,
     cam_box: [f32; 4],
+    /// Cover-glass bezel: dark grey with black hairlines (see `Details::glass_edge`); face px per mm.
+    glass: Option<f32>,
 }
 
 impl FrontSpec {
