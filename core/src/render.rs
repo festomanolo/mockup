@@ -151,7 +151,6 @@ fn render_flat(d: &Device, p: &Params, spec: &FrontSpec, metal: [f32; 3]) -> Res
     let (cx, cy) = (wf / 2.0, hf / 2.0);
     let (bhw, bhh) = spec.body_half();
     let btn = metal.map(|c| c * 0.8);
-    let buttons: [(f32, f32); 2] = [(0.25, 0.065), (0.41, 0.033)];
     let landscape = p.orientation == Orientation::Landscape;
     let fp = 1.0 / s;
     let mut data = vec![0u8; (ow as usize) * (oh as usize) * 4];
@@ -166,7 +165,7 @@ fn render_flat(d: &Device, p: &Params, spec: &FrontSpec, metal: [f32; 3]) -> Res
             let mut px = [0f32; 4];
             // side buttons peek out from under the body on the right edge
             if u > bhw - ppm {
-                for (from_top, half) in buttons {
+                for (from_top, half) in BUTTONS {
                     let by = (from_top - 0.5) * 2.0 * bhh;
                     let dd = sd_rrect(u, v, bhw - 0.1 * ppm, by, 0.5 * ppm, half * 2.0 * bhh, 0.3 * ppm);
                     over(&mut px, btn, cover(dd, fp));
