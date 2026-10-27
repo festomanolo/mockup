@@ -185,7 +185,7 @@ mod tests {
         // the bottom-wall openings (USB-C, speaker, S Pen...) only exist with the details block
         let d = dev("galaxy-s24-ultra");
         let mut plain = d.clone();
-        plain.details = Default::default();
+        plain.details.ports.clear();
         let img = solid(40, 80, [255, 255, 255, 255]);
         let dark = |d: &crate::manifest::Device| {
             let o = render(d, &params(Orientation::Right, Some(Image { rgba: &img, w: 40, h: 80 }), 0.3)).unwrap();
