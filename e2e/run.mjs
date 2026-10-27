@@ -67,6 +67,10 @@ try {
   // remove the three extra shots again so the zip check stays about the two uploaded files
   for (let i = 0; i < 3; i++) await page.click(".shot:last-child .rm");
   await page.waitForFunction(() => document.querySelectorAll(".shot").length === 2, { timeout: 15000 });
+  const bg = process.env.BG;
+  if (bg) await page.click(`button[aria-label="${bg} background"]`);
+  await new Promise((r) => setTimeout(r, 800));
+  await page.screenshot({ path: join(out, "03-styled.png") });
   await page.click("button.primary");
   await page.waitForFunction(() => /Done:/.test(document.querySelector(".status")?.textContent ?? ""), { timeout: 120000 });
   console.log(`generate: ${((Date.now() - t0) / 1000).toFixed(1)} s for ${2 * expected.length} mockups`);
