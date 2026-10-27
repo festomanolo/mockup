@@ -181,6 +181,33 @@ mod tests {
     }
 
     #[test]
+    fn s24_ultra_detail_adds_ports_and_rounder_3d_corners() {
+        // the bottom-wall openings (USB-C, speaker, S Pen...) only exist with the details block
+        let d = dev("galaxy-s24-ultra");
+        let mut plain = d.clone();
+        plain.details = Default::default();
+        let img = solid(40, 80, [255, 255, 255, 255]);
+        let dark = |d: &crate::manifest::Device| {
+            let o = render(d, &params(Orientation::Right, Some(Image { rgba: &img, w: 40, h: 80 }), 0.3)).unwrap();
+            // lower-right region holds the bottom wall in this view
+            (o.height * 3 / 4..o.height).flat_map(|y| (o.width / 2..o.width).map(move |x| (x, y))).filter(|&(x, y)| {
+                let p = px(&o, x, y);
+                p[3] == 255 && p[0] < 30
+            }).count()
+        };
+        assert!(dark(&d) > dark(&plain) + 50, "{} vs {}", dark(&d), dark(&plain));
+        assert!(d.corner_r_3d() > d.body.corner_r);
+    }
+
+    #[test]
+    fn rejects_ports_that_do_not_fit() {
+        let mut m = crate::manifest::bundled();
+        let d = m.devices.iter_mut().find(|d| d.id == "galaxy-s24-ultra").unwrap();
+        d.details.ports[0].x = 60.0;
+        assert!(crate::manifest::validate(&m).is_err());
+    }
+
+    #[test]
     fn real_thickness_is_visible_in_3d() {
         // Same phone, but pretending to be 4x thicker must show a visibly larger side wall.
         let thin = dev("iphone-15-pro");
