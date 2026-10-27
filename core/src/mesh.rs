@@ -252,7 +252,8 @@ pub fn build(d: &Device) -> Mesh {
             m.extrude(&front(b.w / 2.0, b.h / 2.0, b.d), &ident);
             // power and volume buttons on the right side wall (or painted by the wall shader)
             let t = 0.5;
-            for (from_top, half) in [(0.25, 0.065), (0.41, 0.033)] {
+            let buttons: &[(f32, f32)] = if d.details.wall_buttons { &[] } else { &crate::wall::BUTTONS };
+            for &(from_top, half) in buttons {
                 m.cuboid([b.w / 2.0 - t * 0.2, b.h * (0.5 - from_top), -b.d / 2.0], [t, b.h * half, (b.d * 0.17).max(0.5)], &ident, Mat::Metal);
             }
         }
