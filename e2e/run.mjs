@@ -82,6 +82,7 @@ try {
   const first = list.find((n) => n.startsWith("second-"));
   execFileSync("unzip", ["-o", "-q", join(out, zipName), first, "-d", join(out, "x")]);
   const probe = execFileSync("python3", ["-c", `
+from PIL import Image
   if (errors.length) throw new Error("console errors: " + errors.join(" | "));
   console.log("E2E OK ->", out);
 } catch (e) {
