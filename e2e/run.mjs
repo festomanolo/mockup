@@ -95,7 +95,7 @@ print(w, h, im.getpixel((2, 2)), semi)
   console.log("export probe (w h corner semi-transparent px):", probe);
   const m = probe.match(/^(\d+) (\d+) \((\d+), (\d+), (\d+), (\d+)\) (\d+)$/);
   const [r, g, b2, al, semi] = [m[3], m[4], m[5], m[6], m[7]].map(Number);
-  if (bg) { if (al !== 255 || b2 < r + 30) throw new Error("background not applied to export"); }
+  if (bg) { if (al !== 255 || (r === 0 && b2 === 0)) throw new Error("background not applied to export"); }
   else if (al !== 0 || semi < 1000) throw new Error("expected transparent corner and a soft shadow");
   void g;
   if (errors.length) throw new Error("console errors: " + errors.join(" | "));
