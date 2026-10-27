@@ -143,6 +143,10 @@ fn axis_table(n: usize, f: f32, max: usize) -> Vec<(u32, u32, f32)> {
     (0..n)
         .map(|i| {
             let fx = ((i as f32 + 0.5) / f - 0.5).max(0.0);
+            let x0 = (fx as usize).min(max - 1);
+            (x0 as u32, (x0 + 1).min(max - 1) as u32, fx - x0 as f32)
+        })
+        .collect()
 }
 
 impl Shadow {
