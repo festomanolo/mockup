@@ -152,8 +152,7 @@ fn axis_table(n: usize, f: f32, max: usize) -> Vec<(u32, u32, f32)> {
 impl Shadow {
     #[inline]
     fn at(&self, x: usize, y: usize) -> f32 {
-        let (fx, fy) = (((x as f32 + 0.5) / self.f - 0.5).max(0.0), ((y as f32 + 0.5) / self.f - 0.5).max(0.0));
-        let (x0, y0) = ((fx as usize).min(self.lw - 1), (fy as usize).min(self.lh - 1));
+        let (x0, x1, tx) = self.xt[x];
         let (x1, y1) = ((x0 + 1).min(self.lw - 1), (y0 + 1).min(self.lh - 1));
         let (tx, ty) = (fx - x0 as f32, fy - y0 as f32);
         let g = |xx: usize, yy: usize| self.a[yy * self.lw + xx];
