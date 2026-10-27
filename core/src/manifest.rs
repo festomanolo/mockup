@@ -175,6 +175,11 @@ pub struct Derived {
 }
 
 impl Device {
+    /// Corner radius used by the 3D model.
+    pub fn corner_r_3d(&self) -> f32 {
+        self.details.corner_r_3d.unwrap_or(self.body.corner_r)
+    }
+
     pub fn derived(&self) -> Derived {
         let (sw, sh) = (self.screen.w as f32, self.screen.h as f32);
         let diag_mm = self.screen.diag_in * 25.4;
@@ -260,6 +265,18 @@ pub fn validate(m: &Manifest) -> Result<(), String> {
             if s.total_h <= b.h || s.foot_w <= 0.0 || s.foot_d <= 0.0 || s.foot_t <= 0.0 {
                 return Err(format!("{id}: invalid stand spec"));
             }
+        }
+        if d.details.corner_r_3d.is_some_and(|r| !(r > b.edge_r + 0.2 && r < b.w / 4.0)) {
+            return Err(format!("{id}: invalid corner_r_3d"));
+        }
+        for p in &d.details.ports {
+            if !(p.w > 0.0 && p.h > 0.0 && p.h < b.d && p.x.abs() + p.w / 2.0 < b.w / 2.0 - b.edge_r) {
+                return Err(format!("{id}: port {:?} does not fit the bottom wall", p.kind));
+            }
+        }
+        let bd = &d.details.bands;
+        if bd.bottom.iter().chain(&bd.top).any(|x| x.abs() >= b.w / 2.0) || bd.side.iter().any(|y| !(0.0..b.h).contains(y)) {
+            return Err(format!("{id}: antenna band outside the body"));
         }
         if d.sources.is_empty() {
             return Err(format!("{id}: missing source records"));
