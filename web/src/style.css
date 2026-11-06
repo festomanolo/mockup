@@ -178,3 +178,6 @@ progress { width: 100%; margin-top: 10px; }
 .studio span { font-size: 13px; opacity: .85; }
 
 /* store studio: layout and responsiveness */
+main:has(.slayout) { max-width: 1480px; }
+.slayout { grid-template-columns: minmax(0, 1fr) minmax(340px, 460px); }
+.slayout > * { min-width: 0; }
