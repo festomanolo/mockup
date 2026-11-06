@@ -10,6 +10,34 @@ import { layout, type TextPlace } from "./templates";
 export type Shot = { id: number; url: string; name: string; file: File; w: number; h: number; framed: boolean };
 export type Assets = { shots: Shot[]; placeholders: number[] };
 
+const framedCache = new Map<string, Promise<ImageBitmap>>();
+async function framedBitmap(shot: Shot, needW: number): Promise<ImageBitmap> {
+  const w = BUCKETS.find((b) => b >= needW) ?? 4096;
+  const key = `${shot.id}|${w}`;
+  let p = framedCache.get(key);
+  if (!p) {
+    p = createImageBitmap(shot.file, shot.w > w ? { resizeWidth: w, resizeQuality: "high" } : undefined);
+    framedCache.set(key, p);
+    p.catch(() => framedCache.delete(key));
+    if (framedCache.size > 30) { const old = framedCache.keys().next().value!; framedCache.get(old)?.then((b) => b.close()).catch(() => {}); framedCache.delete(old); }
+  }
+  return p;
+}
+
+/** A CSS-style gradient (angle 0 = up, 90 = right) over the box x,y,w,h. */
+function makeGradient(c: CanvasRenderingContext2D, g: Gradient, x: number, y: number, w: number, h: number): CanvasGradient {
+  const cx = x + w / 2, cy = y + h / 2;
+  let gr: CanvasGradient;
+  if (g.type === "radial") {
+    gr = c.createRadialGradient(cx, cy, 0, cx, cy, Math.max(w, h) / 2);
+  } else {
+    const a = (g.angle * Math.PI) / 180, dx = Math.sin(a), dy = -Math.cos(a), len = Math.abs(w * dx) + Math.abs(h * dy);
+    gr = c.createLinearGradient(cx - (dx * len) / 2, cy - (dy * len) / 2, cx + (dx * len) / 2, cy + (dy * len) / 2);
+  }
+  for (const st of [...g.stops].sort((p, q) => p.p - q.p)) gr.addColorStop(Math.min(1, Math.max(0, st.p)), st.c);
+  return gr;
+}
+
 // ---------- device bitmaps ----------
 const bitmaps = new Map<string, Promise<ImageBitmap>>();
 const aspects = new Map<string, Promise<number>>();
@@ -77,15 +105,10 @@ export async function makePlaceholders(): Promise<number[]> {
 // ---------- colour helpers ----------
 const rgb = (hex: string): [number, number, number] => [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
 const lum = ([r, g, b]: number[]) => (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-const mix = (a: string, b: string, t: number) => { const x = rgb(a), y = rgb(b); return x.map((v, i) => v + (y[i] - v) * t) as [number, number, number]; };
 
 /** Approximate background colour at the slide's centre, used to choose readable text. */
 function bgAt(L: Listing, i: number, n: number): [number, number, number] {
-  const cs = paletteColors(L);
-  if (!L.seamless) return mix(cs[i % cs.length], cs[(i + 1) % cs.length], 0.5);
-  const t = n === 1 ? 0.5 : (i + 0.5) / n;
-  const pos = t * (cs.length - 1), k = Math.min(cs.length - 2, Math.floor(pos));
-  return mix(cs[k], cs[k + 1], pos - k);
+  return gradAt(L.bg, L.seamless && n > 1 ? (i + 0.5) / n : 0.5);
 }
 function inkFor(L: Listing, i: number, n: number): { fg: string; soft: string; dark: boolean } {
   const dark = L.textColor === "auto" ? lum(bgAt(L, i, n)) > 0.62 : L.textColor === "dark";
