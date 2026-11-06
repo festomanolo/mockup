@@ -305,10 +305,11 @@ export function renderShapePreview(canvas: HTMLCanvasElement, bg: Gradient, laye
 export async function renderFeature(canvas: HTMLCanvasElement, L: Listing, A: Assets, W = FEATURE.w, H = FEATURE.h) {
   canvas.width = W; canvas.height = H;
   const c = canvas.getContext("2d")!;
-  const cs = paletteColors(L);
-  const g = c.createLinearGradient(0, 0, W, H * 0.6);
-  cs.forEach((col, k) => g.addColorStop(cs.length === 1 ? 0 : k / (cs.length - 1), col));
-  c.fillStyle = g; c.fillRect(0, 0, W, H);
+  c.fillStyle = makeGradient(c, L.bg, 0, 0, W, H); c.fillRect(0, 0, W, H);
+  const dark0 = inkFor(L, 0, 1).dark;
+  for (const layer of L.shapes) {
+    if (layer.style !== "none") drawShapes(c, layer, { W: H * 1.3, H, j0: 0, j1: Math.ceil(W / (H * 1.3)), x0: 0, x1: W }, dark0);
+  }
   const r = c.createRadialGradient(W * 0.78, H * 0.45, 0, W * 0.78, H * 0.45, H * 1.1);
   r.addColorStop(0, "rgba(255,255,255,.22)"); r.addColorStop(1, "rgba(255,255,255,0)");
   c.fillStyle = r; c.fillRect(0, 0, W, H);
@@ -337,10 +338,12 @@ export async function renderFeature(canvas: HTMLCanvasElement, L: Listing, A: As
     for (const l of wrap(c, s0.sub, maxW).slice(0, 2)) { c.fillText(l, W * 0.06, y); y += ss * 1.3; }
   }
   const a = await deviceAspect(L.deviceId, L.finish);
-  const dw = H * 0.78 * a;
   const places = [{ x: W * 0.68, top: H * 0.16, rot: -0.09, off: 1 }, { x: W * 0.85, top: H * 0.1, rot: 0.07, off: 0 }];
   for (const p of places) {
-    const bmp = await deviceBitmap(L.deviceId, L.finish, pickShot(A, L.slides[0].shot, 0, p.off), Math.ceil(dw / a));
+    const pick = pickShot(A, L.slides[0].shot, 0, p.off);
+    const aP = "framed" in pick ? pick.framed.w / pick.framed.h : a;
+    const dw = H * 0.78 * aP;
+    const bmp = await pickBitmap(L.deviceId, L.finish, pick, dw, a).bmp;
     drawDevice(c, bmp, p.x, p.top, dw, p.rot, W * 0.5, ink.dark);
   }
 }
