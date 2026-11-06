@@ -16,6 +16,7 @@ The renderer is Rust compiled to WebAssembly, running in a pool of Web Workers. 
 - **Galaxy S24 Ultra detail (tilted views):** camera angle fitted to MockUPhone's right/left exports (screen corners give a 44° tilt and 35° spin); grey cover-glass bezel with black hairlines, thin titanium lip and groove, rounder 3D corners, and a wall shader that paints the SIM tray and pin hole, mic, USB-C, speaker grille, S Pen, antenna bands and side buttons. Positions are measured from those exports and listed under `details` in `core/devices.json`, so other models can get the same treatment once measured.
 
 ## Guided studio (`/studio/`)
+
 ## Store listing studio (`/store/`)
 
 Builds App Store and Google Play listing graphics and text.
