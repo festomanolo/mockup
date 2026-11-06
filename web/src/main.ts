@@ -88,7 +88,7 @@ function shell(content: HTMLElement) {
   app.replaceChildren(
     el("header", { class: "top" },
       el("a", { class: "brand", href: "/" }, "Mockup"),
-      el("nav", { class: "nav" }, el("a", { href: "/" }, "Stills"), el("a", { href: `/video/${devices[0].id}/` }, "Video")),
+      el("nav", { class: "nav" }, el("a", { href: "/" }, "Stills"), el("a", { href: `/video/${devices[0].id}/` }, "Video"), el("a", { href: "/store/" }, "Store listing")),
       el("span", { class: "note" }, "Rendered locally with Rust + WebAssembly · nothing is uploaded")),
     el("main", {}, content),
     el("footer", {}, "3D models are original, built from published dimensions (sources and estimated values are listed on each device page). Not manufacturer assets; product names are used descriptively."),
