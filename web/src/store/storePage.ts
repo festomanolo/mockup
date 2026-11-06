@@ -490,7 +490,7 @@ export function storePage(devices: StoreDevice[]): { el: HTMLElement; load: (fil
   const el = h("div", {},
     h("h1", {}, "Store listing studio"),
     h("p", { class: "sub" }, "App Store and Google Play screenshots, carousels and text. Draft the words with AI if you like, then edit everything and export a ready-to-upload ZIP."),
-    h("div", { class: "layout" }, left, side));
+    h("div", { class: "layout slayout" }, left, side));
 
   syncAiUi(); drawPalettes(); rebuildSlides(); rebuildCopy(); drawShots(); void refreshModels();
   void makePlaceholders().then((ids) => { A.placeholders = ids; if (alive) void paintAll(); }).catch(() => { void paintAll(); });

@@ -170,10 +170,42 @@ progress { width: 100%; margin-top: 10px; }
 .cfh { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; font-size: 13px; }
 .cfh .wc { margin-left: auto; }
 .cfh .chip { padding: 2px 10px; font-size: 12px; }
-@media (max-width: 900px) { .sslide { height: 52vh; } }
 @media (prefers-color-scheme: dark) { .fld > span { color: #8b93a1; } }
 
 .studios { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-bottom: 20px; }
 .studio { display: grid; gap: 2px; padding: 14px 18px; border-radius: 12px; background: #0b46f0; color: #fff; transition: transform .15s; }
 .studio:hover { transform: translateY(-2px); }
 .studio span { font-size: 13px; opacity: .85; }
+
+/* store studio: layout and responsiveness */
+main:has(.slayout) { max-width: 1480px; }
+.slayout { grid-template-columns: minmax(0, 1fr) minmax(340px, 460px); }
+.slayout > * { min-width: 0; }
+.slayout .vcol { top: 12px; }
+.sstage { overflow: hidden; }
+.sstrip { max-width: 100%; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+.slide input, .slide select, .shead select { min-width: 0; }
+.shead select { max-width: 46%; }
+.row { flex-wrap: wrap; }
+@media (max-width: 1000px) {
+  .slayout { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .slayout .vcol { display: contents; }
+  .slayout .sbar { padding: 8px 12px; }
+  .slayout .sstage { position: sticky; top: 0; z-index: 20; padding: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.12); }
+  .sslide { height: min(34vh, 360px); }
+  .sstrip-note { font-size: 11px; }
+}
+@media (max-width: 560px) {
+  main { padding: 16px 14px 48px; }
+  header.top { padding: 10px 14px; flex-wrap: wrap; gap: 8px 14px; }
+  header.top .note { display: none; }
+  h1 { font-size: 24px; }
+  .pcard { padding: 14px; }
+  .row > .fld { flex: 1 1 100%; }
+  .shead strong { flex: 1 1 100%; }
+  .shead select { max-width: 100%; flex: 1 1 40%; }
+  .cfh .fine { flex: 1 1 100%; order: 3; }
+  .sslide { height: min(28vh, 260px); }
+  .studios { grid-template-columns: 1fr; }
+}
+@media (hover: none) { .rm2 { min-width: 32px; min-height: 32px; } .chip, .chk { min-height: 36px; } }
