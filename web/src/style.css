@@ -201,3 +201,5 @@ main:has(.slayout) { max-width: 1480px; }
   header.top .note { display: none; }
   h1 { font-size: 24px; }
   .pcard { padding: 14px; }
+  .row > .fld { flex: 1 1 100%; }
+  .shead strong { flex: 1 1 100%; }
