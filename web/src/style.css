@@ -176,3 +176,5 @@ progress { width: 100%; margin-top: 10px; }
 .studio { display: grid; gap: 2px; padding: 14px 18px; border-radius: 12px; background: #0b46f0; color: #fff; transition: transform .15s; }
 .studio:hover { transform: translateY(-2px); }
 .studio span { font-size: 13px; opacity: .85; }
+
+/* store studio: layout and responsiveness */
