@@ -57,7 +57,7 @@ export function layout(t: TemplateId, W: number, H: number, a: number): Layout {
     case "bigType":
       return {
         text: { x: W * 0.08, y: H * 0.06, w: W * 0.84, align: "left", scale: 1.32, maxLines: 4 },
-        devices: [{ x: W * 0.68, top: H * 0.56, w: fit(W * 0.62, H * 0.5), rot: 0.1, shotOffset: 0 }],
+        devices: [{ x: W * 0.62, top: H * 0.45, w: fit(W * 0.76, H * 0.62), rot: 0.09, shotOffset: 0 }],
       };
     case "rings":
       return { text: centerText, rings: true, devices: [{ x: W * 0.5, top: H * 0.32, w: fit(W * 0.72, H * 0.68), rot: 0, shotOffset: 0 }] };

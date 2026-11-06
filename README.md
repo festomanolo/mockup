@@ -15,6 +15,15 @@ The renderer is Rust compiled to WebAssembly, running in a pool of Web Workers. 
 - **Backgrounds and shadows:** transparent, solid, 6 gradient presets plus a custom two-colour gradient with angle; padding (none/small/medium/large); soft, floating and contact shadows with a strength slider. Shadows are blurred from the device's own silhouette (two layers: ambient + contact), the canvas grows to fit, and the choice is remembered in the browser. Defaults: transparent background, small padding, soft shadow.
 - **Galaxy S24 Ultra detail (tilted views):** camera angle fitted to MockUPhone's right/left exports (screen corners give a 44° tilt and 35° spin); grey cover-glass bezel with black hairlines, thin titanium lip and groove, rounder 3D corners, and a wall shader that paints the SIM tray and pin hole, mic, USB-C, speaker grille, S Pen, antenna bands and side buttons. Positions are measured from those exports and listed under `details` in `core/devices.json`, so other models can get the same treatment once measured.
 
+## Store listing studio (`/store/`)
+
+Builds App Store and Google Play listing graphics and text.
+
+- **Carousel screenshots** from 9 hand-built layouts (hero, big crop, text below, tilt, duo, rings, big type, and a two-slide *bridge* where a device and the background flow across the slide edge). Slides are drawn from one panorama, so seamless carousels line up exactly. Devices come from the same Rust/WASM renderer as the stills page.
+- **Optional AI writer**: describe the app and an OpenAI-compatible model (OpenRouter, a local Ollama, or any custom URL) drafts the headlines, sub-lines and store text (title, subtitle, short description, keywords, promo text, description, what's new) against the store character limits. The AI writes **words only**; every word stays editable, and single slides can be rewritten. Invalid answers are retried once. Only the text you typed is sent, never screenshots, and sending requires ticking a consent box. Keys stay in memory unless you tick "remember". For Ollama run `OLLAMA_ORIGINS=* ollama serve`.
+- **Export ZIP**: iPhone 6.9" (1320×2868), iPhone 6.5" (1284×2778), iPad 13" (2064×2752), Google Play phone (1080×1920) and tablet (1600×2560), the 1024×500 feature graphic (JPEG, no alpha), a 512×512 icon, `listing-copy.txt` and a `listing.json` project file. Confirm sizes against App Store Connect / Play Console before uploading.
+- Limitations: tablet sets reuse the phone screenshots (cropped to fill); screenshots are not stored in project files; no URL capture.
+
 ## Video mockups (`/video/<device>/`)
 
 A second studio next to the stills: the device is rendered live in **WebGL (Three.js)** with a screenshot or screen recording on its screen, a camera animation on top, and exported as a video. Everything runs in the tab; nothing is uploaded. Reach it from the **Video** link in the header or the banner on any device page.
@@ -87,5 +96,6 @@ In headless Chrome, `e2e/run.mjs` generates two screenshots across all orientati
 
 - `core/` – Rust crate: manifest, face shader (`front`), meshes (`mesh`), rasterizer (`raster`), orchestration (`render`), wasm bindings
 - `web/` – Vite + TypeScript UI, worker pool (`engine.ts`, `worker.ts`), zip writer
+- `web/src/store/` – store listing studio: `model.ts` (targets, palettes, listing data), `templates.ts` (layouts), `render.ts` (Canvas drawing), `ai.ts` (text-only AI client), `storePage.ts` (UI); loaded lazily
 - `web/src/video/` – video studio: `device3d.ts` (Three.js models), `animation.ts` (presets, easing, keyframes), `stage.ts` (renderer, lights, camera rig), `exporter.ts` (WebCodecs + muxers), `videoPage.ts` (UI); loaded lazily so the stills app stays small
 - `e2e/` – browser end-to-end checks

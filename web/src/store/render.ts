@@ -167,6 +167,19 @@ function wrap(c: C, text: string, maxW: number): string[] {
   return lines;
 }
 
+/** Wraps like `wrap` but narrows the measure while the line count stays the same, so the last line is never a lone word. */
+function balanced(c: C, text: string, maxW: number): string[] {
+  const base = wrap(c, text, maxW);
+  if (base.length < 2) return base;
+  let best = base;
+  for (let w = maxW * 0.96; w > maxW * 0.45; w -= maxW * 0.04) {
+    const t = wrap(c, text, w);
+    if (t.length !== base.length || t.some((l) => c.measureText(l).width > maxW)) break;
+    best = t;
+  }
+  return best;
+}
+
 function drawText(c: C, L: Listing, p: TextPlace, headline: string, sub: string, W: number, ink: { fg: string; soft: string }) {
   if (!headline.trim() && !sub.trim()) return;
   const f = FONTS[L.font];
@@ -186,6 +199,7 @@ function drawText(c: C, L: Listing, p: TextPlace, headline: string, sub: string,
   c.fillStyle = ink.fg;
   const lh = size * 1.08;
   let y = p.y;
+  lines = balanced(c, headline, p.w);
   for (const l of lines) { c.fillText(l, p.x, y); y += lh; }
   if (sub.trim()) {
     const ss = Math.min(size * 0.42, W * 0.04 * p.scale);
@@ -193,7 +207,7 @@ function drawText(c: C, L: Listing, p: TextPlace, headline: string, sub: string,
     c.font = `500 ${ss}px ${f.css}`;
     c.fillStyle = ink.soft;
     y += size * 0.16;
-    for (const l of wrap(c, sub, p.w * 0.92).slice(0, 3)) { c.fillText(l, p.x, y); y += ss * 1.3; }
+    for (const l of balanced(c, sub, p.w * 0.92).slice(0, 3)) { c.fillText(l, p.x, y); y += ss * 1.3; }
   }
   c.restore();
 }
