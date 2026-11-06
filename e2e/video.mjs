@@ -29,7 +29,7 @@ try {
   await (await page.createCDPSession()).send("Browser.setDownloadBehavior", { behavior: "allow", downloadPath: out });
   await page.goto(`http://localhost:${port}/video/${device}/`, { waitUntil: "load", timeout: 60000 });
   page.on("console", (m) => { if (m.type() === "error") console.log("CONSOLE", m.text()); });
-  await page.waitForSelector("canvas.vcanvas");
+  await page.waitForSelector("canvas.vcanvas").catch(async (e) => { console.log("ERRORS", errors, await page.evaluate(() => document.body.innerHTML.slice(0, 1500))); throw e; });
 
   const png = await page.evaluate(() => {
     const c = document.createElement("canvas"); c.width = 600; c.height = 400;
