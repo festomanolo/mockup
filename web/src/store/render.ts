@@ -207,7 +207,7 @@ function drawText(c: C, L: Listing, p: TextPlace, headline: string, sub: string,
     c.font = `500 ${ss}px ${f.css}`;
     c.fillStyle = ink.soft;
     y += size * 0.16;
-    for (const l of wrap(c, sub, p.w * 0.92).slice(0, 3)) { c.fillText(l, p.x, y); y += ss * 1.3; }
+    for (const l of balanced(c, sub, p.w * 0.92).slice(0, 3)) { c.fillText(l, p.x, y); y += ss * 1.3; }
   }
   c.restore();
 }
