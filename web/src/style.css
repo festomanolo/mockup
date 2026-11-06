@@ -191,3 +191,5 @@ main:has(.slayout) { max-width: 1480px; }
   .slayout { grid-template-columns: minmax(0, 1fr); gap: 14px; }
   .slayout .vcol { display: contents; }
   .slayout .sbar { padding: 8px 12px; }
+  .slayout .sstage { position: sticky; top: 0; z-index: 20; padding: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.12); }
+  .sslide { height: min(34vh, 360px); }
