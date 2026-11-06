@@ -397,6 +397,8 @@ function videoRoute(d: Device) {
 }
 
 function route() {
+  disposePage?.();
+  disposePage = null;
   const m = location.pathname.match(/^\/model\/([\w-]+)\/?$/);
   const d = m && devices.find((x) => x.id === m[1]);
   currentLoad = null;
