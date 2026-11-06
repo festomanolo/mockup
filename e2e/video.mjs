@@ -42,7 +42,7 @@ try {
   await new Promise((r) => setTimeout(r, 1000));
 
   await page.click('button[aria-label="Ocean background"]');
-  await page.$eval('input[aria-label="Duration in seconds"]', (e) => { e.value = DUR; e.dispatchEvent(new Event("input", { bubbles: true })); });
+  await page.$eval('input[aria-label="Duration in seconds"]', (e, DUR) => { e.value = DUR; e.dispatchEvent(new Event("input", { bubbles: true })); }, DUR);
   await page.select('select[aria-label="Resolution"]', RES);
   await page.select('select[aria-label="Frame rate"]', "24");
   await page.select('select[aria-label="Format"]', "mp4");
