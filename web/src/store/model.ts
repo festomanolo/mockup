@@ -80,11 +80,12 @@ export const EMPTY_COPY: StoreCopy = { title: "", subtitle: "", short: "", promo
 
 export type Listing = {
   app: { name: string; idea: string; audience: string; tone: string; language: string };
-  palette: string;
-  custom: string[]; // used when palette === "custom"
+  bg: Gradient;
+  shapes: ShapeLayer[];
   seamless: boolean;
   font: FontId;
-  textColor: "auto" | "light" | "dark";
+  textColor: "auto" | "light" | "dark" | "custom";
+  textCustom: string;
   deviceId: string;
   tabletId: string;
   finish: number;
@@ -121,7 +122,7 @@ export function defaultListing(deviceId: string, tabletId: string): Listing {
   const t = autoTemplates(SAMPLE_HEADLINES.length);
   return {
     app: { name: "", idea: "", audience: "", tone: "Friendly and confident", language: "English" },
-    palette: "aurora", custom: ["#1f2a6b", "#6a3df0", "#14c8e0"], seamless: true, font: "modern", textColor: "auto",
+    bg: gradFromColors(PALETTES[0].colors), shapes: [{ ...newShape("blobs"), seed: 7 }], seamless: true, font: "modern", textColor: "auto", textCustom: "#ffffff",
     deviceId, tabletId, finish: 0,
     slides: SAMPLE_HEADLINES.map(([headline, sub], i) => ({ id: newId(), template: t[i], headline, sub, shot: null })),
     copy: { ...EMPTY_COPY },
