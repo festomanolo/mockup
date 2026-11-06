@@ -58,6 +58,7 @@ try {
   await page.click("button.primary");
   await page.waitForFunction(() => /Done|cannot|Error|failed/i.test(document.querySelector(".status")?.textContent ?? ""), { timeout: 540000 });
   const status = await page.$eval(".status", (e) => e.textContent);
+  console.log("status:", status);
   if (!/^Done/.test(status)) fail(status);
 
   const mp4 = readdirSync(out).find((f) => f.endsWith(".mp4"));
