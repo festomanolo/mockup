@@ -170,7 +170,6 @@ progress { width: 100%; margin-top: 10px; }
 .cfh { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; font-size: 13px; }
 .cfh .wc { margin-left: auto; }
 .cfh .chip { padding: 2px 10px; font-size: 12px; }
-@media (max-width: 900px) { .sslide { height: 52vh; } }
 @media (prefers-color-scheme: dark) { .fld > span { color: #8b93a1; } }
 
 .studios { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-bottom: 20px; }
