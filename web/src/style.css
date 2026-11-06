@@ -172,3 +172,4 @@ progress { width: 100%; margin-top: 10px; }
 .cfh .chip { padding: 2px 10px; font-size: 12px; }
 @media (max-width: 900px) { .sslide { height: 52vh; } }
 @media (prefers-color-scheme: dark) { .fld > span { color: #8b93a1; } }
+
