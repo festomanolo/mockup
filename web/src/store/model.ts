@@ -168,17 +168,27 @@ export function sanitizeListing(raw: unknown, base: Listing): Listing {
       }))
     : base.slides;
   const copy = (r.copy ?? {}) as Record<string, unknown>;
-  const custom = Array.isArray(r.custom) ? r.custom.filter((c: unknown): c is string => typeof c === "string" && HEX.test(c)).slice(0, 4) : [];
+  const bg = sanitizeGradient(r.bg, base.bg);
+  const shapes: ShapeLayer[] = Array.isArray(r.shapes)
+    ? r.shapes.slice(0, 3).map((x: any) => ({
+        style: SHAPE_STYLES.some((t) => t.id === x?.style) ? x.style : "blobs",
+        tone: ["auto", "light", "dark", "custom"].includes(x?.tone) ? x.tone : "auto",
+        color: typeof x?.color === "string" && HEX.test(x.color) ? x.color : "#ffffff",
+        opacity: Number.isFinite(x?.opacity) ? Math.min(1, Math.max(0.05, x.opacity)) : 0.6,
+        scale: Number.isFinite(x?.scale) ? Math.min(2.5, Math.max(0.4, x.scale)) : 1,
+        seed: Number.isInteger(x?.seed) ? x.seed : 1,
+      }))
+    : base.shapes;
   return {
     app: {
       name: str(app.name, 60), idea: str(app.idea, 1500), audience: str(app.audience, 200),
       tone: str(app.tone, 100, base.app.tone), language: str(app.language, 40, base.app.language),
     },
-    palette: r.palette === "custom" || PALETTES.some((p) => p.id === r.palette) ? r.palette : base.palette,
-    custom: custom.length >= 2 ? custom : base.custom,
+    bg, shapes,
     seamless: typeof r.seamless === "boolean" ? r.seamless : base.seamless,
     font: r.font in FONTS ? r.font : base.font,
-    textColor: ["auto", "light", "dark"].includes(r.textColor) ? r.textColor : "auto",
+    textColor: ["auto", "light", "dark", "custom"].includes(r.textColor) ? r.textColor : "auto",
+    textCustom: typeof r.textCustom === "string" && HEX.test(r.textCustom) ? r.textCustom : "#ffffff",
     deviceId: typeof r.deviceId === "string" ? r.deviceId : base.deviceId,
     tabletId: typeof r.tabletId === "string" ? r.tabletId : base.tabletId,
     finish: Number.isInteger(r.finish) && r.finish >= 0 && r.finish < 8 ? r.finish : 0,
