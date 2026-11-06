@@ -47,6 +47,8 @@ try {
   await page.select('select[aria-label="Frame rate"]', "24");
   await page.select('select[aria-label="Format"]', "mp4");
   if (AUDIO) {
+    const n = 48000 * 3, b = Buffer.alloc(44 + n * 2);
+    b.write("RIFF", 0); b.writeUInt32LE(36 + n * 2, 4); b.write("WAVEfmt ", 8); b.writeUInt32LE(16, 16); b.writeUInt16LE(1, 20); b.writeUInt16LE(1, 22);
   await page.click("button.primary");
   await page.waitForFunction(() => /Done|cannot|Error|failed/i.test(document.querySelector(".status")?.textContent ?? ""), { timeout: 180000 });
   const status = await page.$eval(".status", (e) => e.textContent);
