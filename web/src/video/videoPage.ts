@@ -407,7 +407,7 @@ export function videoPage(d: DeviceSpec): VideoPage {
     const t0 = performance.now();
     try {
       const res = await exportVideo({
-        canvas, width: w, height: hh, fps: st.fps, duration: st.duration, format, alpha: transparent && format !== "mp4", quality: st.quality,
+        canvas, width: w, height: hh, fps: st.fps, duration: st.duration, format, alpha: transparent && format === "webm", quality: st.quality,
         audio: audioSrc ? { file: audioSrc, volume: st.volume, fadeOut: st.fadeOut } : undefined,
         signal: abort.signal,
         renderFrame: async (_i, t) => {
