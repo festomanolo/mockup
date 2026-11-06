@@ -60,6 +60,7 @@ try {
   const status = await page.$eval(".status", (e) => e.textContent);
   console.log("status:", status);
   if (!/^Done/.test(status)) fail(status);
+  if (AUDIO && /Audio skipped/.test(status)) fail("audio was skipped");
 
   const mp4 = readdirSync(out).find((f) => f.endsWith(".mp4"));
   if (!mp4) fail("no mp4 downloaded");
