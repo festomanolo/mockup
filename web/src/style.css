@@ -188,3 +188,6 @@ main:has(.slayout) { max-width: 1480px; }
 .shead select { max-width: 46%; }
 .row { flex-wrap: wrap; }
 @media (max-width: 1000px) {
+  .slayout { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .slayout .vcol { display: contents; }
+  .slayout .sbar { padding: 8px 12px; }
