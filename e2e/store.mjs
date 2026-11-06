@@ -72,8 +72,11 @@ try {
   await page.evaluate(() => [...document.querySelectorAll("button")].find((b) => /Export listing ZIP/.test(b.textContent)).click());
   await page.waitForFunction(() => /^Done|failed|cannot|could not/i.test(document.querySelectorAll(".status")[document.querySelectorAll(".status").length - 1]?.textContent ?? ""), { timeout: 560000 });
   console.log("export:", await page.evaluate(() => [...document.querySelectorAll(".status")].pop().textContent));
-  await new Promise((r) => setTimeout(r, 1500));
-  const zipFile = readdirSync(out).find((f) => f.endsWith(".zip"));
+  let zipFile;
+  for (let k = 0; k < 60 && !zipFile; k++) { // Chrome writes a .crdownload first
+    zipFile = readdirSync(out).find((f) => f.endsWith(".zip"));
+    if (!zipFile) await new Promise((r) => setTimeout(r, 500));
+  }
   if (!zipFile) fail("no zip downloaded");
   else {
     const dir = join(out, "unz");
