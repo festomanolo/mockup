@@ -19,6 +19,8 @@ The renderer is Rust compiled to WebAssembly, running in a pool of Web Workers. 
 
 Builds App Store and Google Play listing graphics and text.
 
+- **Carousel screenshots** from 9 hand-built layouts (hero, big crop, text below, tilt, duo, rings, big type, and a two-slide *bridge* where a device and the background flow across the slide edge). Slides are drawn from one panorama, so seamless carousels line up exactly. Devices come from the same Rust/WASM renderer as the stills page.
+- **Optional AI writer**: describe the app and an OpenAI-compatible model (OpenRouter, a local Ollama, or any custom URL) drafts the headlines, sub-lines and store text (title, subtitle, short description, keywords, promo text, description, what's new) against the store character limits. The AI writes **words only**; every word stays editable, and single slides can be rewritten. Invalid answers are retried once. Only the text you typed is sent, never screenshots, and sending requires ticking a consent box. Keys stay in memory unless you tick "remember". For Ollama run `OLLAMA_ORIGINS=* ollama serve`.
 
 ## Video mockups (`/video/<device>/`)
 
