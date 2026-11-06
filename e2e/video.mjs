@@ -46,6 +46,7 @@ try {
   await page.select('select[aria-label="Resolution"]', RES);
   await page.select('select[aria-label="Frame rate"]', "24");
   await page.select('select[aria-label="Format"]', "mp4");
+  if (AUDIO) {
   await page.click("button.primary");
   await page.waitForFunction(() => /Done|cannot|Error|failed/i.test(document.querySelector(".status")?.textContent ?? ""), { timeout: 180000 });
   const status = await page.$eval(".status", (e) => e.textContent);
