@@ -28,6 +28,7 @@ try {
   page.on("pageerror", (e) => errors.push(e.message));
   await (await page.createCDPSession()).send("Browser.setDownloadBehavior", { behavior: "allow", downloadPath: out });
   await page.goto(`http://localhost:${port}/video/${device}/`, { waitUntil: "load", timeout: 60000 });
+  page.on("console", (m) => { if (m.type() === "error") console.log("CONSOLE", m.text()); });
   await page.waitForSelector("canvas.vcanvas");
 
   const png = await page.evaluate(() => {
