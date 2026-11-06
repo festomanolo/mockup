@@ -126,20 +126,22 @@ function drawBackground(c: C, L: Listing, i: number, n: number, W: number, H: nu
   const seamless = L.seamless && n > 1;
   c.fillStyle = seamless ? makeGradient(c, L.bg, -i * W, 0, n * W, H) : makeGradient(c, L.bg, 0, 0, W, H);
   c.fillRect(0, 0, W, H);
-  // soft light blobs in panorama space, so neighbouring slides share them
-  for (let j = i - 1; j <= i + 1; j++) {
-    if (j < 0 || j >= n) continue;
-    for (let k = 0; k < 2; k++) {
-      const cx = (j - i) * W + W * (0.15 + 0.7 * noise(j, k)), cy = H * (0.15 + 0.7 * noise(j + 9, k + 3)), r = W * (0.55 + 0.35 * noise(j + 4, k));
-      const g = c.createRadialGradient(cx, cy, 0, cx, cy, r);
-      g.addColorStop(0, k ? "rgba(255,255,255,.13)" : "rgba(0,0,0,.14)");
-      g.addColorStop(1, "rgba(255,255,255,0)");
-      c.fillStyle = g;
-      c.fillRect(0, 0, W, H);
+  const dark = inkFor(L, i, n).dark;
+  for (const layer of L.shapes) {
+    if (layer.style === "none") continue;
+    c.save();
+    c.beginPath(); c.rect(0, 0, W, H); c.clip();
+    if (seamless) {
+      // panorama space: neighbours' shapes overflow into this slide, so edges line up exactly
+      c.translate(-i * W, 0);
+      drawShapes(c, layer, { W, H, j0: Math.max(0, i - 1), j1: Math.min(n - 1, i + 1), x0: (i - 1) * W, x1: (i + 2) * W }, dark);
+    } else {
+      drawShapes(c, { ...layer, seed: layer.seed + i * 131 }, { W, H, j0: 0, j1: 0, x0: -W, x1: 2 * W }, dark);
     }
+    c.restore();
   }
   const sheen = c.createLinearGradient(0, 0, 0, H);
-  sheen.addColorStop(0, "rgba(255,255,255,.10)"); sheen.addColorStop(0.5, "rgba(255,255,255,0)"); sheen.addColorStop(1, "rgba(0,0,0,.16)");
+  sheen.addColorStop(0, "rgba(255,255,255,.08)"); sheen.addColorStop(0.5, "rgba(255,255,255,0)"); sheen.addColorStop(1, "rgba(0,0,0,.14)");
   c.fillStyle = sheen;
   c.fillRect(0, 0, W, H);
 }
