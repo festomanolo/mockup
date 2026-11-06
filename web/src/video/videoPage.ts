@@ -397,7 +397,6 @@ export function videoPage(d: DeviceSpec): VideoPage {
     setPlaying(false);
     gen.disabled = true; bar.hidden = false; cancel.hidden = false; bar.value = 0;
     const [w, hh] = dims();
-    const transparent = stage.settings.bg.kind === "transparent";
     const format = effectiveFormat();
     const restore = stage.enterExport(w, hh);
     const audioSrc = st.audioFile ?? (st.useVideoAudio && st.media?.kind === "video" ? st.media.file : null);
