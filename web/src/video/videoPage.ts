@@ -400,6 +400,7 @@ export function videoPage(d: DeviceSpec): VideoPage {
     const format = effectiveFormat();
     const transparent = keepsAlpha();
     const prevBg = stage.settings.bg;
+    if (prevBg.kind === "transparent" && !transparent) { stage.settings.bg = { kind: "solid", color: "#000000" }; stage.applySettings(); }
     const restore = stage.enterExport(w, hh);
     const audioSrc = st.audioFile ?? (st.useVideoAudio && st.media?.kind === "video" ? st.media.file : null);
     const t0 = performance.now();
