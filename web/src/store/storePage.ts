@@ -50,6 +50,7 @@ export function storePage(devices: StoreDevice[]): { el: HTMLElement; load: (fil
   let L: Listing = base;
   const saved = lsGet(LS_LISTING);
   if (saved) { try { L = sanitizeListing(JSON.parse(saved), base); } catch { /* corrupt: use defaults */ } }
+  if (library.deviceChosen && screens.some((d) => d.id === library.deviceId)) { L.deviceId = library.deviceId; L.finish = library.finish; }
   if (!screens.some((d) => d.id === L.deviceId)) L.deviceId = base.deviceId;
   if (!screens.some((d) => d.id === L.tabletId)) L.tabletId = base.tabletId;
 
@@ -189,9 +190,14 @@ export function storePage(devices: StoreDevice[]): { el: HTMLElement; load: (fil
   };
   stopBtn.onclick = () => aiAbort?.abort();
 
-  // ---------- screenshots ----------
+  // ---------- screenshots (shared library) ----------
+  const syncShots = () => {
+    A.shots = library.get("store").map((x) => ({ id: x.id, url: x.url, name: x.name, file: x.file, w: x.w, h: x.h, framed: x.framed }));
+  };
+  syncShots();
   const shotList = h("div", { class: "shots" });
   const fileIn = aria(h("input", { type: "file", accept: "image/png,image/jpeg,image/webp", multiple: true, hidden: true }), "Add screenshots");
+  const mockIn = aria(h("input", { type: "file", accept: "image/png,image/webp", multiple: true, hidden: true }), "Add finished mockups");
   const shotMsg = h("p", { class: "status", role: "status" });
   async function addFiles(files: File[]) {
     const imgs = files.filter((f) => f.type.startsWith("image/"));
