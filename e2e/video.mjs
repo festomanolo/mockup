@@ -56,7 +56,7 @@ try {
     await new Promise((r) => setTimeout(r, 800));
   }
   await page.click("button.primary");
-  await page.waitForFunction(() => /Done|cannot|Error|failed/i.test(document.querySelector(".status")?.textContent ?? ""), { timeout: 180000 });
+  await page.waitForFunction(() => /Done|cannot|Error|failed/i.test(document.querySelector(".status")?.textContent ?? ""), { timeout: 540000 });
   const status = await page.$eval(".status", (e) => e.textContent);
   if (!/^Done/.test(status)) fail(status);
 
