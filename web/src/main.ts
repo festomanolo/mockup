@@ -88,7 +88,7 @@ function shell(content: HTMLElement) {
   app.replaceChildren(
     el("header", { class: "top" },
       el("a", { class: "brand", href: "/" }, "Mockup"),
-      el("nav", { class: "nav" }, el("a", { href: "/" }, "Stills"), el("a", { href: `/video/${devices[0].id}/` }, "Video")),
+      el("nav", { class: "nav" }, el("a", { href: "/" }, "Stills"), el("a", { href: `/video/${devices[0].id}/` }, "Video"), el("a", { href: "/store/" }, "Store listing")),
       el("span", { class: "note" }, "Rendered locally with Rust + WebAssembly · nothing is uploaded")),
     el("main", {}, content),
     el("footer", {}, "3D models are original, built from published dimensions (sources and estimated values are listed on each device page). Not manufacturer assets; product names are used descriptively."),
@@ -396,6 +396,18 @@ function videoRoute(d: Device) {
   shell(el("p", { class: "sub" }, "Loading 3D engine…"));
 }
 
+function storeRoute() {
+  document.title = "Store listing studio – Mockup";
+  import("./store/storePage").then(({ storePage }) => {
+    if (!/^\/store\/?$/.test(location.pathname)) return;
+    const p = storePage(devices as unknown as import("./store/storePage").StoreDevice[]);
+    shell(p.el);
+    disposePage = p.dispose;
+    currentLoad = p.load;
+  }).catch((e) => shell(el("div", {}, el("h1", {}, "Store studio failed to load"), el("p", { class: "sub" }, String(e?.message ?? e)))));
+  shell(el("p", { class: "sub" }, "Loading…"));
+}
+
 function route() {
   disposePage?.();
   disposePage = null;
@@ -405,7 +417,9 @@ function route() {
   currentLoad = null;
   document.title = "Mockup – device mockups in your browser";
   window.scrollTo(0, 0);
-  if (d && v) {
+  if (/^\/store\/?$/.test(location.pathname)) {
+    storeRoute();
+  } else if (d && v) {
     videoRoute(d);
   } else if (d) {
     devicePage(d);
