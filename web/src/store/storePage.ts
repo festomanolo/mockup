@@ -1,15 +1,16 @@
 // Store listing studio: describe the app, let the (optional) AI draft the words, edit everything by hand, and export
 // App Store / Google Play screenshot sets as a ZIP. The AI never touches the design or your screenshots.
-import { dropImage, importImage } from "../engine";
+import { dropImage } from "../engine";
 import { zip } from "../zip";
 import {
   type AiConfig, type Provider, PROVIDERS, generateCopy, listModels, regenerateSlide,
 } from "./ai";
 import {
-  FEATURE, FONTS, LIMITS, PALETTES, TARGETS, TEMPLATES, autoTemplates, defaultListing, newId, sanitizeListing,
-  type FontId, type Listing, type StoreCopy, type TemplateId,
+  FEATURE, FONTS, LIMITS, PALETTES, SHAPE_STYLES, TARGETS, TEMPLATES, autoTemplates, defaultListing, gradAt, gradFromColors, newId, newShape, sanitizeListing,
+  type FontId, type Listing, type ShapeLayer, type ShapeStyleId, type StoreCopy, type TemplateId,
 } from "./model";
-import { type Assets, makePlaceholders, renderFeature, renderSlide, toBlob } from "./render";
+import { type Assets, makePlaceholders, renderFeature, renderShapePreview, renderSlide, toBlob } from "./render";
+import { library } from "../library";
 
 export type StoreDevice = { id: string; brand: string; name: string; kind: string; finishes: { name: string; color: string }[] };
 
