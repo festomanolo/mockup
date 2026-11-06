@@ -379,3 +379,130 @@ export function storePage(devices: StoreDevice[]): { el: HTMLElement; load: (fil
     if (exporting) return;
     const targets = TARGETS.filter((t) => exportSel.has(t.id));
     if (!targets.length && !featChk.checked && !icon) return exMsg("Choose at least one output.", true);
+    exporting = true; exBtn.disabled = true; exBar.hidden = false; exBar.value = 0;
+    const type = fmtSel.value as "image/png" | "image/jpeg";
+    const ext = type === "image/png" ? "png" : "jpg";
+    const files: { name: string; data: Uint8Array }[] = [];
+    const bytes = async (b: Blob) => new Uint8Array(await b.arrayBuffer());
+    const total = targets.reduce((n, t) => n + Math.min(L.slides.length, t.max), 0) + (featChk.checked ? 1 : 0) + (icon ? 1 : 0);
+    let done = 0;
+    const tick = () => { exBar.value = ++done / total; };
+    try {
+      const notes: string[] = [];
+      for (const t of targets) {
+        const count = Math.min(L.slides.length, t.max);
+        if (L.slides.length > t.max) notes.push(`${t.dir}: only the first ${t.max} slides fit.`);
+        for (let i = 0; i < count; i++) {
+          exMsg(`Rendering ${t.dir} ${i + 1}/${count}…`);
+          const cv = document.createElement("canvas");
+          await renderSlide(cv, L, A, i, t.w, t.h, t.kind);
+          files.push({ name: `${t.dir}/${String(i + 1).padStart(2, "0")}.${ext}`, data: await bytes(await toBlob(cv, type)) });
+          cv.width = cv.height = 1;
+          tick();
+        }
+      }
+      if (featChk.checked) {
+        exMsg("Rendering feature graphic…");
+        const cv = document.createElement("canvas");
+        await renderFeature(cv, L, A);
+        files.push({ name: "google-play/feature-graphic-1024x500.jpg", data: await bytes(await toBlob(cv, "image/jpeg", 0.95)) }); // JPEG: Play forbids alpha
+        tick();
+      }
+      if (icon) {
+        const bmp = await createImageBitmap(icon.blob);
+        const cv = document.createElement("canvas"); cv.width = cv.height = 512;
+        const c = cv.getContext("2d")!; c.imageSmoothingQuality = "high";
+        const s = Math.min(bmp.width, bmp.height);
+        c.drawImage(bmp, (bmp.width - s) / 2, (bmp.height - s) / 2, s, s, 0, 0, 512, 512);
+        bmp.close();
+        files.push({ name: "google-play/icon-512.png", data: await bytes(await toBlob(cv, "image/png")) });
+        tick();
+      }
+      const enc = new TextEncoder();
+      files.push({ name: "listing-copy.txt", data: enc.encode(copyText()) });
+      files.push({ name: "listing.json", data: enc.encode(JSON.stringify(L, null, 2)) });
+      const a = h("a", { href: URL.createObjectURL(zip(files)), download: `${(L.app.name || "store-listing").replace(/[^\w-]+/g, "-")}-store-listing.zip` });
+      document.body.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
+      exMsg(`Done: ${files.length} files.${notes.length ? " " + notes.join(" ") : ""} Check sizes against the consoles before uploading.`);
+    } catch (e) { exMsg((e as Error).message, true); }
+    finally { exporting = false; exBtn.disabled = false; exBar.hidden = true; }
+  };
+
+  // project save/load
+  const saveProj = h("button", { class: "chip", textContent: "Save project (.json)" });
+  saveProj.onclick = () => {
+    const a = h("a", { href: URL.createObjectURL(new Blob([JSON.stringify(L, null, 2)], { type: "application/json" })), download: "store-listing.json" });
+    document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
+  };
+  const projIn = aria(h("input", { type: "file", accept: "application/json,.json", hidden: true }), "Open project");
+  const openProj = h("button", { class: "chip", textContent: "Open project…" });
+  openProj.onclick = () => projIn.click();
+  projIn.onchange = async () => {
+    const f = projIn.files?.[0]; projIn.value = "";
+    if (!f) return;
+    try {
+      L = sanitizeListing(JSON.parse(await f.text()), base);
+      syncAll(); schedule();
+      exMsg("Project opened. Screenshots are not stored in the file: add them again.");
+    } catch { exMsg("That file is not a store-listing project.", true); }
+  };
+
+  const reset = h("button", { class: "chip", textContent: "Reset listing" });
+  reset.onclick = () => { if (confirm("Reset all text and design to the defaults?")) { L = defaultListing(firstPhone.id, firstTablet.id); syncAll(); schedule(); } };
+
+  function syncAll() {
+    nameIn.value = L.app.name; ideaIn.value = L.app.idea; audIn.value = L.app.audience; toneIn.value = L.app.tone; langIn.value = L.app.language;
+    phoneSel.value = L.deviceId; tabletSel.value = L.tabletId; fillFinish(); fontSel.value = L.font; inkSel.value = L.textColor; seamless.checked = L.seamless;
+    selected = 0; drawPalettes(); rebuildSlides(); rebuildCopy();
+  }
+
+  // ---------- assemble ----------
+  const left = h("div", { class: "vcol" },
+    h("div", { class: "pcard sbar" }, kindSel, h("label", { class: "chk" }, seamless, " Seamless panorama")),
+    h("div", { class: "pcard sstage" }, strip, stripNote));
+  const side = h("div", { class: "side" },
+    card("1 · Your app", field("Name", nameIn), field("What it does", ideaIn), h("div", { class: "row" }, field("Audience", audIn), field("Tone", toneIn)), field("Write in", langIn)),
+    card("2 · AI writer (optional)",
+      h("p", { class: "fine" }, "The AI writes words only: headlines, sub-lines and store text. You can edit every word, and the design is always done by the app."),
+      field("Provider", provSel), field("Base URL", urlIn), field("Model", modelIn), models, field("API key", keyIn),
+      h("label", { class: "chk" }, remember, " Remember the key in this browser"),
+      aiNote,
+      h("label", { class: "chk" }, consent, " ", consentText),
+      genBtn, stopBtn, aiStatus),
+    card("3 · Screenshots", drop, fileIn, shotList, shotMsg),
+    card("4 · Design",
+      palRow, customRow,
+      h("div", { class: "row" }, field("Font", fontSel), field("Text", inkSel)),
+      h("div", { class: "row" }, field("Phone device", phoneSel), field("Colour", finishSel)),
+      field("Tablet device (for tablet sets)", tabletSel)),
+    card("5 · Slides", slideBox, addSlide),
+    card("6 · Store text", copyBox),
+    card("7 · Export",
+      ...targetBoxes,
+      h("label", { class: "chk" }, featChk, ` Google Play feature graphic (${FEATURE.w}×${FEATURE.h})`),
+      field("App icon → 512×512 (optional)", iconIn),
+      field("Format", fmtSel),
+      exBtn, exBar, exStatus,
+      h("div", { class: "row tight" }, saveProj, openProj, reset), projIn,
+      h("p", { class: "fine" }, "Sizes follow Apple's and Google's published rules at the time of writing; confirm them in App Store Connect and Play Console before uploading. Tablet sets reuse your phone screenshots (cropped to fill): add tablet screenshots for best results.")));
+
+  const el = h("div", {},
+    h("h1", {}, "Store listing studio"),
+    h("p", { class: "sub" }, "App Store and Google Play screenshots, carousels and text. Draft the words with AI if you like, then edit everything and export a ready-to-upload ZIP."),
+    h("div", { class: "layout" }, left, side));
+
+  syncAiUi(); drawPalettes(); rebuildSlides(); rebuildCopy(); drawShots(); void refreshModels();
+  void makePlaceholders().then((ids) => { A.placeholders = ids; if (alive) void paintAll(); }).catch(() => { void paintAll(); });
+
+  return {
+    el,
+    load: (files) => void addFiles(files),
+    dispose() {
+      alive = false; renderToken++; clearTimeout(timer); aiAbort?.abort();
+      for (const s of A.shots) { dropImage(s.id); URL.revokeObjectURL(s.url); }
+      for (const id of A.placeholders) dropImage(id);
+      if (icon) URL.revokeObjectURL(icon.url);
+    },
+  };
+}
