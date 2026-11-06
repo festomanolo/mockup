@@ -129,11 +129,30 @@ export function defaultListing(deviceId: string, tabletId: string): Listing {
   };
 }
 
-export const paletteColors = (l: Listing): string[] =>
-  l.palette === "custom" ? l.custom : (PALETTES.find((p) => p.id === l.palette) ?? PALETTES[0]).colors;
+/** Colour of the gradient at position t (0..1), as [r,g,b]. */
+export function gradAt(g: Gradient, t: number): [number, number, number] {
+  const st = [...g.stops].sort((a, b) => a.p - b.p);
+  const rgb = (hex: string) => [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
+  if (t <= st[0].p) return rgb(st[0].c) as [number, number, number];
+  for (let k = 1; k < st.length; k++) {
+    if (t <= st[k].p) {
+      const a = rgb(st[k - 1].c), b = rgb(st[k].c), u = (t - st[k - 1].p) / Math.max(1e-6, st[k].p - st[k - 1].p);
+      return a.map((v, i) => v + (b[i] - v) * u) as [number, number, number];
+    }
+  }
+  return rgb(st[st.length - 1].c) as [number, number, number];
+}
 
 const HEX = /^#[0-9a-f]{6}$/i;
 const str = (v: unknown, max: number, d = "") => (typeof v === "string" ? v.slice(0, max) : d);
+
+function sanitizeGradient(raw: any, d: Gradient): Gradient {
+  const stops: Stop[] = Array.isArray(raw?.stops)
+    ? raw.stops.filter((x: any) => typeof x?.c === "string" && HEX.test(x.c) && Number.isFinite(x?.p)).slice(0, 6).map((x: any) => ({ c: x.c, p: Math.min(1, Math.max(0, x.p)) }))
+    : [];
+  if (stops.length < 2) return d;
+  return { type: raw.type === "radial" ? "radial" : "linear", angle: Number.isFinite(raw.angle) ? ((raw.angle % 360) + 360) % 360 : 100, stops };
+}
 
 /** Stored/imported data is untrusted: coerce every field and fall back to defaults. */
 export function sanitizeListing(raw: unknown, base: Listing): Listing {
