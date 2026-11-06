@@ -30,7 +30,7 @@ export const DEFAULT_SETTINGS: StageSettings = {
 };
 
 export type Media =
-  | { kind: "image"; el: HTMLImageElement | ImageBitmap; w: number; h: number }
+  | { kind: "image"; el: HTMLImageElement | ImageBitmap | HTMLCanvasElement; w: number; h: number; /** Repainted every frame (screen sequence). */ live?: boolean }
   | { kind: "video"; el: HTMLVideoElement; w: number; h: number };
 
 const LIGHTS: Record<LightPreset, { key: number; fill: number; rim: number; ambient: number; keyPos: [number, number, number] }> = {
@@ -261,6 +261,7 @@ export class Stage {
     this.camera.lookAt(off);
     this.camera.rotateZ((pose.roll * Math.PI) / 180);
     if (this.media?.kind === "video" && this.texture && this.media.el.readyState >= 2) this.texture.needsUpdate = true;
+    if (this.media?.kind === "image" && this.media.live && this.texture) this.texture.needsUpdate = true;
     this.updateBackground();
     this.renderer.render(this.scene, this.camera);
   }

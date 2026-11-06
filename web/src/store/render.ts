@@ -2,11 +2,41 @@
 // sit in the same accurate frames as the stills page. A slide is drawn from the whole panorama (its neighbours are
 // painted too, then cropped), which is what lets backgrounds and devices flow across slide edges.
 import { importImage, render } from "../engine";
-import { FEATURE, FONTS, paletteColors, type Listing } from "./model";
+import { FEATURE, FONTS, gradAt, type Gradient, type Listing } from "./model";
+import { drawShapes } from "./shapes";
 import { layout, type TextPlace } from "./templates";
 
-export type Shot = { id: number; url: string; name: string };
+/** `framed` shots are already mockups (device frame included): they are drawn as they are, never wrapped in a device. */
+export type Shot = { id: number; url: string; name: string; file: File; w: number; h: number; framed: boolean };
 export type Assets = { shots: Shot[]; placeholders: number[] };
+
+const framedCache = new Map<string, Promise<ImageBitmap>>();
+async function framedBitmap(shot: Shot, needW: number): Promise<ImageBitmap> {
+  const w = BUCKETS.find((b) => b >= needW) ?? 4096;
+  const key = `${shot.id}|${w}`;
+  let p = framedCache.get(key);
+  if (!p) {
+    p = createImageBitmap(shot.file, shot.w > w ? { resizeWidth: w, resizeQuality: "high" } : undefined);
+    framedCache.set(key, p);
+    p.catch(() => framedCache.delete(key));
+    if (framedCache.size > 30) { const old = framedCache.keys().next().value!; framedCache.get(old)?.then((b) => b.close()).catch(() => {}); framedCache.delete(old); }
+  }
+  return p;
+}
+
+/** A CSS-style gradient (angle 0 = up, 90 = right) over the box x,y,w,h. */
+function makeGradient(c: CanvasRenderingContext2D, g: Gradient, x: number, y: number, w: number, h: number): CanvasGradient {
+  const cx = x + w / 2, cy = y + h / 2;
+  let gr: CanvasGradient;
+  if (g.type === "radial") {
+    gr = c.createRadialGradient(cx, cy, 0, cx, cy, Math.max(w, h) / 2);
+  } else {
+    const a = (g.angle * Math.PI) / 180, dx = Math.sin(a), dy = -Math.cos(a), len = Math.abs(w * dx) + Math.abs(h * dy);
+    gr = c.createLinearGradient(cx - (dx * len) / 2, cy - (dy * len) / 2, cx + (dx * len) / 2, cy + (dy * len) / 2);
+  }
+  for (const st of [...g.stops].sort((p, q) => p.p - q.p)) gr.addColorStop(Math.min(1, Math.max(0, st.p)), st.c);
+  return gr;
+}
 
 // ---------- device bitmaps ----------
 const bitmaps = new Map<string, Promise<ImageBitmap>>();
@@ -75,53 +105,43 @@ export async function makePlaceholders(): Promise<number[]> {
 // ---------- colour helpers ----------
 const rgb = (hex: string): [number, number, number] => [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
 const lum = ([r, g, b]: number[]) => (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-const mix = (a: string, b: string, t: number) => { const x = rgb(a), y = rgb(b); return x.map((v, i) => v + (y[i] - v) * t) as [number, number, number]; };
 
 /** Approximate background colour at the slide's centre, used to choose readable text. */
 function bgAt(L: Listing, i: number, n: number): [number, number, number] {
-  const cs = paletteColors(L);
-  if (!L.seamless) return mix(cs[i % cs.length], cs[(i + 1) % cs.length], 0.5);
-  const t = n === 1 ? 0.5 : (i + 0.5) / n;
-  const pos = t * (cs.length - 1), k = Math.min(cs.length - 2, Math.floor(pos));
-  return mix(cs[k], cs[k + 1], pos - k);
+  return gradAt(L.bg, L.seamless && n > 1 ? (i + 0.5) / n : 0.5);
 }
 function inkFor(L: Listing, i: number, n: number): { fg: string; soft: string; dark: boolean } {
+  if (L.textColor === "custom") {
+    const [r, g, b] = rgb(L.textCustom);
+    return { fg: L.textCustom, soft: `rgba(${r},${g},${b},.78)`, dark: lum([r, g, b]) < 0.5 };
+  }
   const dark = L.textColor === "auto" ? lum(bgAt(L, i, n)) > 0.62 : L.textColor === "dark";
   return dark ? { fg: "#0d1117", soft: "rgba(13,17,23,.72)", dark } : { fg: "#ffffff", soft: "rgba(255,255,255,.8)", dark };
 }
-const frac = (v: number) => v - Math.floor(v);
-const noise = (j: number, k: number) => frac(Math.sin(j * 127.1 + k * 311.7) * 43758.5453);
 
 // ---------- drawing pieces ----------
 type C = CanvasRenderingContext2D;
 
 function drawBackground(c: C, L: Listing, i: number, n: number, W: number, H: number) {
-  const cs = paletteColors(L);
-  if (L.seamless) {
-    const g = c.createLinearGradient(-i * W, 0, (n - i) * W, 0);
-    cs.forEach((col, k) => g.addColorStop(cs.length === 1 ? 0 : k / (cs.length - 1), col));
-    c.fillStyle = g;
-  } else {
-    const g = c.createLinearGradient(0, 0, W * 0.4, H);
-    g.addColorStop(0, cs[i % cs.length]);
-    g.addColorStop(1, cs[(i + 1) % cs.length]);
-    c.fillStyle = g;
-  }
+  const seamless = L.seamless && n > 1;
+  c.fillStyle = seamless ? makeGradient(c, L.bg, -i * W, 0, n * W, H) : makeGradient(c, L.bg, 0, 0, W, H);
   c.fillRect(0, 0, W, H);
-  // soft light blobs in panorama space, so neighbouring slides share them
-  for (let j = i - 1; j <= i + 1; j++) {
-    if (j < 0 || j >= n) continue;
-    for (let k = 0; k < 2; k++) {
-      const cx = (j - i) * W + W * (0.15 + 0.7 * noise(j, k)), cy = H * (0.15 + 0.7 * noise(j + 9, k + 3)), r = W * (0.55 + 0.35 * noise(j + 4, k));
-      const g = c.createRadialGradient(cx, cy, 0, cx, cy, r);
-      g.addColorStop(0, k ? "rgba(255,255,255,.13)" : "rgba(0,0,0,.14)");
-      g.addColorStop(1, "rgba(255,255,255,0)");
-      c.fillStyle = g;
-      c.fillRect(0, 0, W, H);
+  const dark = inkFor(L, i, n).dark;
+  for (const layer of L.shapes) {
+    if (layer.style === "none") continue;
+    c.save();
+    c.beginPath(); c.rect(0, 0, W, H); c.clip();
+    if (seamless) {
+      // panorama space: neighbours' shapes overflow into this slide, so edges line up exactly
+      c.translate(-i * W, 0);
+      drawShapes(c, layer, { W, H, j0: Math.max(0, i - 1), j1: Math.min(n - 1, i + 1), x0: (i - 1) * W, x1: (i + 2) * W }, dark);
+    } else {
+      drawShapes(c, { ...layer, seed: layer.seed + i * 131 }, { W, H, j0: 0, j1: 0, x0: -W, x1: 2 * W }, dark);
     }
+    c.restore();
   }
   const sheen = c.createLinearGradient(0, 0, 0, H);
-  sheen.addColorStop(0, "rgba(255,255,255,.10)"); sheen.addColorStop(0.5, "rgba(255,255,255,0)"); sheen.addColorStop(1, "rgba(0,0,0,.16)");
+  sheen.addColorStop(0, "rgba(255,255,255,.08)"); sheen.addColorStop(0.5, "rgba(255,255,255,0)"); sheen.addColorStop(1, "rgba(0,0,0,.14)");
   c.fillStyle = sheen;
   c.fillRect(0, 0, W, H);
 }
@@ -213,26 +233,42 @@ function drawText(c: C, L: Listing, p: TextPlace, headline: string, sub: string,
 }
 
 // ---------- public: slide ----------
-const pickShot = (A: Assets, shot: number | null, j: number, off: number): number | null => {
-  if (A.shots.length) return A.shots[((shot ?? j) + off) % A.shots.length].id;
-  if (A.placeholders.length) return A.placeholders[((shot ?? j) + off) % A.placeholders.length];
-  return null;
+type Pick = { framed: Shot } | { id: number | null };
+const pickShot = (A: Assets, shot: number | null, j: number, off: number): Pick => {
+  if (A.shots.length) {
+    const s = A.shots[((shot ?? j) + off) % A.shots.length];
+    return s.framed ? { framed: s } : { id: s.id };
+  }
+  if (A.placeholders.length) return { id: A.placeholders[((shot ?? j) + off) % A.placeholders.length] };
+  return { id: null };
 };
+
+/** Bitmap for a pick: the screenshot inside the chosen device, or a pre-made mockup as it is. */
+function pickBitmap(deviceId: string, finish: number, pick: Pick, devW: number, a: number): { bmp: Promise<ImageBitmap>; w: number } {
+  if ("framed" in pick) {
+    const aP = pick.framed.w / pick.framed.h;
+    return { bmp: framedBitmap(pick.framed, devW * 1.0), w: aP };
+  }
+  return { bmp: deviceBitmap(deviceId, finish, pick.id, Math.ceil(devW / a)), w: a };
+}
 
 export async function renderSlide(canvas: HTMLCanvasElement, L: Listing, A: Assets, i: number, W: number, H: number, kind: "phone" | "tablet") {
   const n = L.slides.length;
   const deviceId = kind === "tablet" ? L.tabletId : L.deviceId;
   const a = await deviceAspect(deviceId, L.finish);
   const js = [i - 1, i, i + 1].filter((j) => j >= 0 && j < n);
-  type Job = { j: number; place: ReturnType<typeof layout>["devices"][number]; bmp: Promise<ImageBitmap> };
+  type Job = { j: number; place: ReturnType<typeof layout>["devices"][number]; bmp: Promise<ImageBitmap>; w: number };
   const lays = js.map((j) => ({ j, lay: layout(L.slides[j].template, W, H, a) }));
   const jobs: Job[] = [];
   for (const { j, lay } of lays) {
     for (const place of lay.devices) {
+      const pick = pickShot(A, L.slides[j].shot, j, place.shotOffset);
+      // a pre-made mockup keeps the layout's height but uses its own aspect ratio
+      const aP = "framed" in pick ? pick.framed.w / pick.framed.h : a;
+      const w = Math.min(W * 0.98, (place.w / a) * aP);
       const off = (j - i) * W + place.x;
-      if (Math.abs(off - W / 2) > W / 2 + place.w * 0.85) continue; // not visible on this slide
-      const need = Math.ceil(place.w / a);
-      jobs.push({ j, place, bmp: deviceBitmap(deviceId, L.finish, pickShot(A, L.slides[j].shot, j, place.shotOffset), need) });
+      if (Math.abs(off - W / 2) > W / 2 + w * 0.85) continue; // not visible on this slide
+      jobs.push({ j, place: { ...place, w }, bmp: pickBitmap(deviceId, L.finish, pick, w, a).bmp, w });
     }
   }
   const bmps = await Promise.all(jobs.map((x) => x.bmp));
@@ -257,14 +293,23 @@ export async function renderSlide(canvas: HTMLCanvasElement, L: Listing, A: Asse
   drawText(c, L, lay.text, s.headline, s.sub, W, inkFor(L, i, n));
 }
 
+/** Small thumbnail of a background gradient with one shape layer, for the style gallery. */
+export function renderShapePreview(canvas: HTMLCanvasElement, bg: Gradient, layer: import("./model").ShapeLayer) {
+  const c = canvas.getContext("2d")!, W = canvas.width, H = canvas.height;
+  c.fillStyle = makeGradient(c, bg, 0, 0, W, H); c.fillRect(0, 0, W, H);
+  const dark = lum(gradAt(bg, 0.5)) > 0.62;
+  drawShapes(c, { ...layer, opacity: Math.max(layer.opacity, 0.7) }, { W: W * 0.7, H, j0: 0, j1: 2, x0: 0, x1: W }, dark);
+}
+
 // ---------- public: Google Play feature graphic (1024×500) ----------
 export async function renderFeature(canvas: HTMLCanvasElement, L: Listing, A: Assets, W = FEATURE.w, H = FEATURE.h) {
   canvas.width = W; canvas.height = H;
   const c = canvas.getContext("2d")!;
-  const cs = paletteColors(L);
-  const g = c.createLinearGradient(0, 0, W, H * 0.6);
-  cs.forEach((col, k) => g.addColorStop(cs.length === 1 ? 0 : k / (cs.length - 1), col));
-  c.fillStyle = g; c.fillRect(0, 0, W, H);
+  c.fillStyle = makeGradient(c, L.bg, 0, 0, W, H); c.fillRect(0, 0, W, H);
+  const dark0 = inkFor(L, 0, 1).dark;
+  for (const layer of L.shapes) {
+    if (layer.style !== "none") drawShapes(c, layer, { W: H * 1.3, H, j0: 0, j1: Math.ceil(W / (H * 1.3)), x0: 0, x1: W }, dark0);
+  }
   const r = c.createRadialGradient(W * 0.78, H * 0.45, 0, W * 0.78, H * 0.45, H * 1.1);
   r.addColorStop(0, "rgba(255,255,255,.22)"); r.addColorStop(1, "rgba(255,255,255,0)");
   c.fillStyle = r; c.fillRect(0, 0, W, H);
@@ -293,10 +338,12 @@ export async function renderFeature(canvas: HTMLCanvasElement, L: Listing, A: As
     for (const l of wrap(c, s0.sub, maxW).slice(0, 2)) { c.fillText(l, W * 0.06, y); y += ss * 1.3; }
   }
   const a = await deviceAspect(L.deviceId, L.finish);
-  const dw = H * 0.78 * a;
   const places = [{ x: W * 0.68, top: H * 0.16, rot: -0.09, off: 1 }, { x: W * 0.85, top: H * 0.1, rot: 0.07, off: 0 }];
   for (const p of places) {
-    const bmp = await deviceBitmap(L.deviceId, L.finish, pickShot(A, L.slides[0].shot, 0, p.off), Math.ceil(dw / a));
+    const pick = pickShot(A, L.slides[0].shot, 0, p.off);
+    const aP = "framed" in pick ? pick.framed.w / pick.framed.h : a;
+    const dw = H * 0.78 * aP;
+    const bmp = await pickBitmap(L.deviceId, L.finish, pick, dw, a).bmp;
     drawDevice(c, bmp, p.x, p.top, dw, p.rot, W * 0.5, ink.dark);
   }
 }

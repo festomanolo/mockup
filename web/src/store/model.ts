@@ -37,7 +37,26 @@ export const FONTS = {
 } as const;
 export type FontId = keyof typeof FONTS;
 
+export type Stop = { c: string; p: number };
+export type Gradient = { type: "linear" | "radial"; angle: number; stops: Stop[] };
+export type ShapeStyleId =
+  | "none" | "blobs" | "bubbles" | "rings" | "waves" | "dunes" | "diagonals" | "dots" | "grid" | "triangles" | "hexagons"
+  | "sparkles" | "ribbons" | "arcs" | "aurora" | "confetti" | "contours" | "squares" | "scales";
+export type ShapeLayer = { style: ShapeStyleId; tone: "auto" | "light" | "dark" | "custom"; color: string; opacity: number; scale: number; seed: number };
+export const SHAPE_STYLES: { id: ShapeStyleId; label: string }[] = [
+  { id: "blobs", label: "Blobs" }, { id: "bubbles", label: "Bubbles" }, { id: "rings", label: "Rings" }, { id: "waves", label: "Waves" },
+  { id: "dunes", label: "Dunes" }, { id: "diagonals", label: "Diagonals" }, { id: "dots", label: "Halftone" }, { id: "grid", label: "Grid" },
+  { id: "triangles", label: "Triangles" }, { id: "hexagons", label: "Honeycomb" }, { id: "sparkles", label: "Sparkles" }, { id: "ribbons", label: "Ribbons" },
+  { id: "arcs", label: "Arcs" }, { id: "aurora", label: "Aurora" }, { id: "confetti", label: "Confetti" }, { id: "contours", label: "Flow lines" },
+  { id: "squares", label: "Squares" }, { id: "scales", label: "Scales" },
+];
+export const newShape = (style: ShapeStyleId = "blobs"): ShapeLayer => ({ style, tone: "auto", color: "#ffffff", opacity: 0.6, scale: 1, seed: Math.floor(Math.random() * 1000) });
+
 export type Palette = { id: string; name: string; colors: string[] };
+/** Evenly spaced stops for a list of colours. */
+export const gradFromColors = (colors: string[], angle = 100, type: Gradient["type"] = "linear"): Gradient => ({
+  type, angle, stops: colors.map((c, k) => ({ c, p: colors.length === 1 ? 0 : k / (colors.length - 1) })),
+});
 /** Hand-picked gradients; the first colour leads the panorama, the rest follow across the slides. */
 export const PALETTES: Palette[] = [
   { id: "aurora", name: "Aurora", colors: ["#1f2a6b", "#6a3df0", "#14c8e0"] },
@@ -61,11 +80,12 @@ export const EMPTY_COPY: StoreCopy = { title: "", subtitle: "", short: "", promo
 
 export type Listing = {
   app: { name: string; idea: string; audience: string; tone: string; language: string };
-  palette: string;
-  custom: string[]; // used when palette === "custom"
+  bg: Gradient;
+  shapes: ShapeLayer[];
   seamless: boolean;
   font: FontId;
-  textColor: "auto" | "light" | "dark";
+  textColor: "auto" | "light" | "dark" | "custom";
+  textCustom: string;
   deviceId: string;
   tabletId: string;
   finish: number;
@@ -102,18 +122,37 @@ export function defaultListing(deviceId: string, tabletId: string): Listing {
   const t = autoTemplates(SAMPLE_HEADLINES.length);
   return {
     app: { name: "", idea: "", audience: "", tone: "Friendly and confident", language: "English" },
-    palette: "aurora", custom: ["#1f2a6b", "#6a3df0", "#14c8e0"], seamless: true, font: "modern", textColor: "auto",
+    bg: gradFromColors(PALETTES[0].colors), shapes: [{ ...newShape("blobs"), seed: 7 }], seamless: true, font: "modern", textColor: "auto", textCustom: "#ffffff",
     deviceId, tabletId, finish: 0,
     slides: SAMPLE_HEADLINES.map(([headline, sub], i) => ({ id: newId(), template: t[i], headline, sub, shot: null })),
     copy: { ...EMPTY_COPY },
   };
 }
 
-export const paletteColors = (l: Listing): string[] =>
-  l.palette === "custom" ? l.custom : (PALETTES.find((p) => p.id === l.palette) ?? PALETTES[0]).colors;
+/** Colour of the gradient at position t (0..1), as [r,g,b]. */
+export function gradAt(g: Gradient, t: number): [number, number, number] {
+  const st = [...g.stops].sort((a, b) => a.p - b.p);
+  const rgb = (hex: string) => [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
+  if (t <= st[0].p) return rgb(st[0].c) as [number, number, number];
+  for (let k = 1; k < st.length; k++) {
+    if (t <= st[k].p) {
+      const a = rgb(st[k - 1].c), b = rgb(st[k].c), u = (t - st[k - 1].p) / Math.max(1e-6, st[k].p - st[k - 1].p);
+      return a.map((v, i) => v + (b[i] - v) * u) as [number, number, number];
+    }
+  }
+  return rgb(st[st.length - 1].c) as [number, number, number];
+}
 
 const HEX = /^#[0-9a-f]{6}$/i;
 const str = (v: unknown, max: number, d = "") => (typeof v === "string" ? v.slice(0, max) : d);
+
+function sanitizeGradient(raw: any, d: Gradient): Gradient {
+  const stops: Stop[] = Array.isArray(raw?.stops)
+    ? raw.stops.filter((x: any) => typeof x?.c === "string" && HEX.test(x.c) && Number.isFinite(x?.p)).slice(0, 6).map((x: any) => ({ c: x.c, p: Math.min(1, Math.max(0, x.p)) }))
+    : [];
+  if (stops.length < 2) return d;
+  return { type: raw.type === "radial" ? "radial" : "linear", angle: Number.isFinite(raw.angle) ? ((raw.angle % 360) + 360) % 360 : 100, stops };
+}
 
 /** Stored/imported data is untrusted: coerce every field and fall back to defaults. */
 export function sanitizeListing(raw: unknown, base: Listing): Listing {
@@ -129,17 +168,27 @@ export function sanitizeListing(raw: unknown, base: Listing): Listing {
       }))
     : base.slides;
   const copy = (r.copy ?? {}) as Record<string, unknown>;
-  const custom = Array.isArray(r.custom) ? r.custom.filter((c: unknown): c is string => typeof c === "string" && HEX.test(c)).slice(0, 4) : [];
+  const bg = sanitizeGradient(r.bg, base.bg);
+  const shapes: ShapeLayer[] = Array.isArray(r.shapes)
+    ? r.shapes.slice(0, 3).map((x: any) => ({
+        style: SHAPE_STYLES.some((t) => t.id === x?.style) ? x.style : "blobs",
+        tone: ["auto", "light", "dark", "custom"].includes(x?.tone) ? x.tone : "auto",
+        color: typeof x?.color === "string" && HEX.test(x.color) ? x.color : "#ffffff",
+        opacity: Number.isFinite(x?.opacity) ? Math.min(1, Math.max(0.05, x.opacity)) : 0.6,
+        scale: Number.isFinite(x?.scale) ? Math.min(2.5, Math.max(0.4, x.scale)) : 1,
+        seed: Number.isInteger(x?.seed) ? x.seed : 1,
+      }))
+    : base.shapes;
   return {
     app: {
       name: str(app.name, 60), idea: str(app.idea, 1500), audience: str(app.audience, 200),
       tone: str(app.tone, 100, base.app.tone), language: str(app.language, 40, base.app.language),
     },
-    palette: r.palette === "custom" || PALETTES.some((p) => p.id === r.palette) ? r.palette : base.palette,
-    custom: custom.length >= 2 ? custom : base.custom,
+    bg, shapes,
     seamless: typeof r.seamless === "boolean" ? r.seamless : base.seamless,
     font: r.font in FONTS ? r.font : base.font,
-    textColor: ["auto", "light", "dark"].includes(r.textColor) ? r.textColor : "auto",
+    textColor: ["auto", "light", "dark", "custom"].includes(r.textColor) ? r.textColor : "auto",
+    textCustom: typeof r.textCustom === "string" && HEX.test(r.textCustom) ? r.textCustom : "#ffffff",
     deviceId: typeof r.deviceId === "string" ? r.deviceId : base.deviceId,
     tabletId: typeof r.tabletId === "string" ? r.tabletId : base.tabletId,
     finish: Number.isInteger(r.finish) && r.finish >= 0 && r.finish < 8 ? r.finish : 0,

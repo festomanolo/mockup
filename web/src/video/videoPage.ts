@@ -2,6 +2,7 @@
 import { EASE_LABELS, evaluate, PRESETS, type EaseName, type Key } from "./animation";
 import type { DeviceSpec } from "./device3d";
 import { alphaWebmSupported, exportVideo, MAX_PNG_FRAMES, webCodecsSupported } from "./exporter";
+import { library } from "../library";
 import { DEFAULT_SETTINGS, Stage, type Bg, type LightPreset, type Media } from "./stage";
 
 type Props<K extends keyof HTMLElementTagNameMap> = Partial<HTMLElementTagNameMap[K]> & { class?: string };
@@ -94,7 +95,21 @@ export function videoPage(d: DeviceSpec): VideoPage {
     dirty = true;
   };
   const cycles = () => Math.max(1, Math.round(st.duration / 4));
-  const drawNow = () => stage.draw(st.keys, st.u, cycles());
+  // A sequence of library screenshots shown one after another on the device screen, with a short cross-fade.
+  let slideshow: { frames: ImageBitmap[]; canvas: HTMLCanvasElement } | null = null;
+  const paintSlideshow = (u: number) => {
+    if (!slideshow) return;
+    const { frames, canvas: cv } = slideshow, x = cv.getContext("2d")!, m = frames.length;
+    const cover = (img: ImageBitmap) => {
+      const k = Math.max(cv.width / img.width, cv.height / img.height), w = img.width * k, hh = img.height * k;
+      x.drawImage(img, (cv.width - w) / 2, (cv.height - hh) / 2, w, hh);
+    };
+    const p = Math.min(0.99999, Math.max(0, u)) * m, idx = Math.floor(p), f = p - idx;
+    x.globalAlpha = 1; x.fillStyle = "#000"; x.fillRect(0, 0, cv.width, cv.height);
+    cover(frames[idx]);
+    if (f > 0.86) { const t = (f - 0.86) / 0.14; x.globalAlpha = t * t * (3 - 2 * t); cover(frames[(idx + 1) % m]); x.globalAlpha = 1; }
+  };
+  const drawNow = () => { paintSlideshow(st.u); stage.draw(st.keys, st.u, cycles()); };
 
   // ---------- media ----------
   const hint = h("div", { class: "vhint" }, "Add an image or video for the screen");
@@ -104,7 +119,9 @@ export function videoPage(d: DeviceSpec): VideoPage {
   const status = h("div", { class: "status", role: "status" });
   const say = (m: string, err = false) => { status.textContent = m; status.className = "status" + (err ? " err" : ""); };
 
+  const clearSlideshow = () => { slideshow?.frames.forEach((f) => f.close()); slideshow = null; };
   const clearMedia = () => {
+    clearSlideshow();
     if (videoEl) { videoEl.pause(); videoEl.removeAttribute("src"); videoEl.load(); }
     videoEl = null;
     if (st.media) URL.revokeObjectURL(st.media.url);
@@ -154,6 +171,38 @@ export function videoPage(d: DeviceSpec): VideoPage {
     say(`Reading ${f.name}…`);
     loadMedia(f).then(() => say("")).catch((e) => say((e as Error).message, true));
   };
+
+  /** Puts the library's video-selected screenshots on the device: one image, or a cross-fading sequence. */
+  const useLibrary = async () => {
+    const shots = library.get("video").filter((x) => !x.framed);
+    if (!shots.length) return false;
+    if (shots.length === 1) { await loadMedia(shots[0].file); return true; }
+    const frames = await Promise.all(shots.map((x) => createImageBitmap(x.file)));
+    const aspect = d.screen.w / d.screen.h;
+    const cv = document.createElement("canvas");
+    cv.width = aspect >= 1 ? 1920 : Math.round(1920 * aspect); cv.height = aspect >= 1 ? Math.round(1920 / aspect) : 1920;
+    clearMedia();
+    slideshow = { frames, canvas: cv };
+    st.media = { file: shots[0].file, url: URL.createObjectURL(shots[0].file), kind: "image", duration: 0 };
+    paintSlideshow(0);
+    stage.setMedia({ kind: "image", el: cv, w: cv.width, h: cv.height, live: true });
+    hint.style.display = "none";
+    mediaInfo.textContent = `${shots.length} screens from your library, cross-fading across the clip`;
+    st.duration = Math.min(60, Math.max(st.duration, shots.length * 2.5)); durIn.value = String(st.duration); durOut.textContent = String(st.duration);
+    syncExportInfo();
+    dirty = true;
+    return true;
+  };
+  const libInfo = h("p", { class: "fine" });
+  const libBtn = h("button", { class: "chip", textContent: "Use library screens" });
+  libBtn.onclick = () => { void useLibrary().then((ok) => say(ok ? "" : "No screenshots are selected for video. Choose some in the Guided studio.", !ok)).catch((e) => say((e as Error).message, true)); };
+  const syncLib = () => {
+    const n = library.get("video").filter((x) => !x.framed).length;
+    libInfo.replaceChildren(`Library: ${n} screenshot${n === 1 ? "" : "s"} selected for video. `, h("a", { href: "/studio/" }, "Choose in the Guided studio →"));
+    libBtn.disabled = n === 0;
+  };
+  const unsubLib = library.on(syncLib);
+  syncLib();
 
   const file = h("input", { type: "file", accept: "image/png,image/jpeg,image/webp,video/mp4,video/webm,video/quicktime", hidden: true });
   const drop = h("div", { class: "drop", tabIndex: 0, role: "button" }, h("strong", {}, "Upload an image or screen recording"), h("u", {}, "Or browse files"));
@@ -436,7 +485,7 @@ export function videoPage(d: DeviceSpec): VideoPage {
 
   // ---------- assemble ----------
   const side = h("div", { class: "side" },
-    card("Screen media", drop, file, mediaInfo, h("div", { class: "row tight" }, fitSel, fitBtn)),
+    card("Screen media", drop, file, mediaInfo, h("div", { class: "row tight" }, fitSel, fitBtn), libInfo, h("div", { class: "row tight" }, libBtn)),
     card("Device", cname, sw, isHandheld ? h("div", { class: "row tight" }, layoutSel) : h("span"),
       slider("Screen gloss", 0, 1, 0.05, DEFAULT_SETTINGS.glare, (v) => set("glare", v))),
     card("Camera animation", presetSel, presetHint, durLabel, easeSel,
@@ -454,7 +503,8 @@ export function videoPage(d: DeviceSpec): VideoPage {
       slider("Volume", 0, 1, 0.05, 1, (v) => { st.volume = v; if (audioEl) audioEl.volume = v; }),
       slider("Fade out (s)", 0, 5, 0.5, 1, (v) => { st.fadeOut = v; })),
     card("Export", h("div", { class: "row" }, aspectSel, resSel, fpsSel), h("div", { class: "row tight" }, fmtSel, qualSel), exportInfo,
-      gen, bar, cancel, status));
+      gen, bar, cancel, status,
+      h("p", { class: "fine" }, "Next: ", h("a", { href: "/store/" }, "build the App Store & Play listing →"))));
 
   const timeline = h("div", { class: "timeline" }, playBtn, h("div", { class: "track" }, scrub, marks), clock);
   const stageCol = h("div", { class: "vcol" }, stageCard, timeline);
@@ -466,6 +516,7 @@ export function videoPage(d: DeviceSpec): VideoPage {
   // ---------- run ----------
   stageCard.ondragover = (e) => e.preventDefault();
   sizeWrap(); drawSw(); drawBgs(); rebuildKeys(); drawKeys(); syncExportInfo();
+  void useLibrary().catch(() => {}); // screens picked in the Guided studio show up straight away
   let lastTick = performance.now();
   let raf = 0;
   const loop = (now: number) => {
@@ -493,6 +544,7 @@ export function videoPage(d: DeviceSpec): VideoPage {
       abort?.abort();
       ro.disconnect();
       document.removeEventListener("visibilitychange", onVis);
+      unsubLib();
       clearMedia();
       setAudio(null);
       stage.dispose();

@@ -88,7 +88,7 @@ function shell(content: HTMLElement) {
   app.replaceChildren(
     el("header", { class: "top" },
       el("a", { class: "brand", href: "/" }, "Mockup"),
-      el("nav", { class: "nav" }, el("a", { href: "/" }, "Stills"), el("a", { href: `/video/${devices[0].id}/` }, "Video"), el("a", { href: "/store/" }, "Store listing")),
+      el("nav", { class: "nav" }, el("a", { href: "/" }, "Stills"), el("a", { href: `/video/${devices[0].id}/` }, "Video"), el("a", { href: "/store/" }, "Store listing"), el("a", { href: "/studio/" }, "Guided")),
       el("span", { class: "note" }, "Rendered locally with Rust + WebAssembly · nothing is uploaded")),
     el("main", {}, content),
     el("footer", {}, "3D models are original, built from published dimensions (sources and estimated values are listed on each device page). Not manufacturer assets; product names are used descriptively."),
@@ -128,6 +128,7 @@ function home() {
     el("a", { class: "studio", href }, el("strong", {}, title), el("span", {}, text));
   shell(el("div", {}, el("h1", {}, "Device mockups"), el("p", { class: "sub" }, "Pick a device, drop a screenshot, download the mockup."),
     el("div", { class: "studios" },
+      studio("/studio/", "✨ Guided studio", "Upload screenshots once: mockups, video and store listing, step by step"),
       studio(`/video/${devices[0].id}/`, "🎬 Video mockups", "3D camera moves, MP4 / WebM export"),
       studio("/store/", "🛍️ App Store & Play listings", "Carousel screenshots, feature graphic and store text, with an optional AI writer")),
     el("div", { class: "tools" }, search), chips, el("div", { class: "gap" }), grid));
@@ -413,6 +414,18 @@ function storeRoute() {
   shell(el("p", { class: "sub" }, "Loading…"));
 }
 
+function studioRoute() {
+  document.title = "Guided studio – Mockup";
+  import("./wizard/wizardPage").then(({ wizardPage }) => {
+    if (!/^\/studio\/?$/.test(location.pathname)) return;
+    const p = wizardPage(devices as unknown as import("./wizard/wizardPage").WizardDevice[]);
+    shell(p.el);
+    disposePage = p.dispose;
+    currentLoad = p.load;
+  }).catch((e) => shell(el("div", {}, el("h1", {}, "Guided studio failed to load"), el("p", { class: "sub" }, String(e?.message ?? e)))));
+  shell(el("p", { class: "sub" }, "Loading…"));
+}
+
 function route() {
   disposePage?.();
   disposePage = null;
@@ -422,7 +435,9 @@ function route() {
   currentLoad = null;
   document.title = "Mockup – device mockups in your browser";
   window.scrollTo(0, 0);
-  if (/^\/store\/?$/.test(location.pathname)) {
+  if (/^\/studio\/?$/.test(location.pathname)) {
+    studioRoute();
+  } else if (/^\/store\/?$/.test(location.pathname)) {
     storeRoute();
   } else if (d && v) {
     videoRoute(d);
