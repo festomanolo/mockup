@@ -372,17 +372,16 @@ export function videoPage(d: DeviceSpec): VideoPage {
   };
   const exportInfo = h("p", { class: "fine" });
   /** Transparent output needs a format with alpha: WebM when the browser can encode it, else PNG frames. */
-  const effectiveFormat = (): "mp4" | "webm" | "png" => {
-    if (stage.settings.bg.kind !== "transparent" || st.format === "png") return st.format;
-    return st.alphaWebm ? "webm" : "png";
-  };
+  const effectiveFormat = (): "mp4" | "webm" | "png" => st.format;
+  /** True when the clip will really carry alpha (only WebM-with-alpha or PNG frames can). */
+  const keepsAlpha = () => stage.settings.bg.kind === "transparent" && (st.format === "png" || (st.format === "webm" && st.alphaWebm));
   function syncExportInfo() {
     const transparent = stage.settings.bg.kind === "transparent";
     const f = effectiveFormat();
     const [w, hh] = dims();
     const frames = Math.round(st.duration * st.fps);
     const label = f === "png" ? "PNG sequence in a ZIP" : f === "webm" ? "WebM" : "MP4";
-    const note = transparent ? (f === "png" && st.format !== "png" ? " · this browser cannot write transparent video, so frames are exported as transparent PNGs" : " · transparent") : "";
+    const note = !transparent ? "" : keepsAlpha() ? " · transparent" : " · transparent background will be flattened onto black (pick WebM or PNG sequence for real transparency)";
     exportInfo.textContent = `${w}×${hh} · ${frames} frames · ${label}${note}${f === "png" && frames > MAX_PNG_FRAMES ? ` · over the ${MAX_PNG_FRAMES}-frame limit` : ""}`;
   }
   void alphaWebmSupported().then((ok) => { st.alphaWebm = ok; syncExportInfo(); });
@@ -398,14 +397,17 @@ export function videoPage(d: DeviceSpec): VideoPage {
     setPlaying(false);
     gen.disabled = true; bar.hidden = false; cancel.hidden = false; bar.value = 0;
     const [w, hh] = dims();
-    const transparent = stage.settings.bg.kind === "transparent";
     const format = effectiveFormat();
-    const restore = stage.enterExport(w, hh);
+    const transparent = keepsAlpha();
+    const prevBg = stage.settings.bg;
+    if (prevBg.kind === "transparent" && !transparent) { stage.settings.bg = { kind: "solid", color: "#000000" }; stage.applySettings(); }
+    const restore0 = stage.enterExport(w, hh);
+    const restore = () => { restore0(); if (stage.settings.bg !== prevBg) { stage.settings.bg = prevBg; stage.applySettings(); } };
     const audioSrc = st.audioFile ?? (st.useVideoAudio && st.media?.kind === "video" ? st.media.file : null);
     const t0 = performance.now();
     try {
       const res = await exportVideo({
-        canvas, width: w, height: hh, fps: st.fps, duration: st.duration, format, alpha: transparent && format !== "mp4", quality: st.quality,
+        canvas, width: w, height: hh, fps: st.fps, duration: st.duration, format, alpha: transparent && format === "webm", quality: st.quality,
         audio: audioSrc ? { file: audioSrc, volume: st.volume, fadeOut: st.fadeOut } : undefined,
         signal: abort.signal,
         renderFrame: async (_i, t) => {

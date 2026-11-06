@@ -26,7 +26,7 @@ export type StageSettings = {
 };
 
 export const DEFAULT_SETTINGS: StageSettings = {
-  bg: { kind: "transparent" }, light: "studio", envIntensity: 1, exposure: 1, shadow: 0.5, glare: 0.5, fov: 28, float: 0.25, landscape: false, fit: "cover",
+  bg: { kind: "linear", from: "#4facfe", to: "#00f2fe", angle: 135 }, light: "studio", envIntensity: 1, exposure: 1, shadow: 0.5, glare: 0.5, fov: 28, float: 0.25, landscape: false, fit: "cover",
 };
 
 export type Media =
