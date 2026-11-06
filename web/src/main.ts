@@ -125,6 +125,7 @@ function home() {
   search.oninput = () => { query = search.value.trim().toLowerCase(); draw(); };
   drawChips(); draw();
   const studio = (href: string, title: string, text: string) =>
+    el("a", { class: "studio", href }, el("strong", {}, title), el("span", {}, text));
   shell(el("div", {}, el("h1", {}, "Device mockups"), el("p", { class: "sub" }, "Pick a device, drop a screenshot, download the mockup."),
     el("div", { class: "tools" }, search), chips, el("div", { class: "gap" }), grid));
 }
