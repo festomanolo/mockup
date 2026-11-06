@@ -417,7 +417,9 @@ function route() {
   currentLoad = null;
   document.title = "Mockup – device mockups in your browser";
   window.scrollTo(0, 0);
-  if (d && v) {
+  if (/^\/store\/?$/.test(location.pathname)) {
+    storeRoute();
+  } else if (d && v) {
     videoRoute(d);
   } else if (d) {
     devicePage(d);
