@@ -17,6 +17,8 @@ The renderer is Rust compiled to WebAssembly, running in a pool of Web Workers. 
 
 ## Store listing studio (`/store/`)
 
+Builds App Store and Google Play listing graphics and text.
+
 
 ## Video mockups (`/video/<device>/`)
 
