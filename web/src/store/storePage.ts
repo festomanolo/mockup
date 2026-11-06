@@ -199,33 +199,25 @@ export function storePage(devices: StoreDevice[]): { el: HTMLElement; load: (fil
   const fileIn = aria(h("input", { type: "file", accept: "image/png,image/jpeg,image/webp", multiple: true, hidden: true }), "Add screenshots");
   const mockIn = aria(h("input", { type: "file", accept: "image/png,image/webp", multiple: true, hidden: true }), "Add finished mockups");
   const shotMsg = h("p", { class: "status", role: "status" });
-  async function addFiles(files: File[]) {
-    const imgs = files.filter((f) => f.type.startsWith("image/"));
-    for (const f of imgs) {
-      if (A.shots.length >= 10) { shotMsg.textContent = "Ten screenshots is the most a store allows."; break; }
-      try {
-        const r = await importImage(f);
-        A.shots.push({ id: r.id, url: r.url, name: f.name });
-        shotMsg.textContent = "";
-      } catch (e) { shotMsg.textContent = (e as Error).message; shotMsg.classList.add("bad"); }
-    }
-    drawShots(); rebuildSlides(); schedule();
-  }
-  function removeShot(k: number) {
-    const [s] = A.shots.splice(k, 1);
-    dropImage(s.id); URL.revokeObjectURL(s.url);
-    for (const sl of L.slides) { if (sl.shot !== null) sl.shot = sl.shot === k ? null : sl.shot > k ? sl.shot - 1 : sl.shot; }
-    drawShots(); rebuildSlides(); schedule();
+  async function addFiles(files: File[], framed?: boolean) {
+    const before = new Set(library.shots.map((x) => x.id));
+    const errs = await library.add(files, framed === undefined ? {} : { framed });
+    for (const x of library.shots) if (!before.has(x.id)) library.set(x.id, { store: true });
+    shotMsg.textContent = errs.join(" ");
+    shotMsg.classList.toggle("bad", errs.length > 0);
   }
   function drawShots() {
-    shotList.replaceChildren(...A.shots.map((s, k) => {
-      const rm = h("button", { class: "rm2", textContent: "×", title: "Remove" });
-      rm.setAttribute("aria-label", `Remove screenshot ${k + 1}`);
-      rm.onclick = () => removeShot(k);
-      return h("div", { class: "shot" }, Object.assign(new Image(), { src: s.url, alt: s.name }), h("span", {}, String(k + 1)), rm);
+    shotList.replaceChildren(...library.get("store").map((x, k) => {
+      const rm = h("button", { class: "rm2", textContent: "×", title: "Take out of the store listing" });
+      rm.setAttribute("aria-label", `Remove screenshot ${k + 1} from the listing`);
+      rm.onclick = () => library.set(x.id, { store: false });
+      const mode = h("button", { class: "mode", textContent: x.framed ? "Mockup" : "Raw", title: x.framed ? "Finished mockup: used as it is. Click to treat as a raw screenshot." : "Raw screenshot: placed in the chosen device. Click if this is already a finished mockup." });
+      mode.setAttribute("aria-pressed", String(x.framed));
+      mode.onclick = () => library.set(x.id, { framed: !x.framed });
+      return h("div", { class: "shot" }, Object.assign(new Image(), { src: x.url, alt: x.name }), h("span", {}, String(k + 1)), rm, mode);
     }));
   }
-  const drop = h("div", { class: "drop", tabIndex: 0 }, h("strong", {}, "Add app screenshots"), h("br"), h("small", {}, "PNG, JPEG or WebP, up to 10 · drop, paste or click · sample screens are shown until you add yours"));
+  const drop = h("div", { class: "drop", tabIndex: 0 }, h("strong", {}, "Add app screenshots"), h("br"), h("small", {}, "Raw screens go into the chosen device · transparent PNGs are treated as finished mockups · sample screens show until you add yours"));
   drop.onclick = () => fileIn.click();
   drop.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileIn.click(); } };
   fileIn.onchange = () => { void addFiles([...(fileIn.files ?? [])]); fileIn.value = ""; };
