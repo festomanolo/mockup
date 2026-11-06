@@ -2,6 +2,7 @@ import "./style.css";
 import devicesJson from "../../core/devices.json";
 import { zip } from "./zip";
 import { dropImage, importImage, render, renderEncoded, Superseded, type Rendered } from "./engine";
+import type { DeviceSpec } from "./video/device3d";
 
 type Source = { field: string; status: "fetched" | "derived" | "estimated" | "generic"; url?: string; note?: string };
 type Device = {
@@ -87,6 +88,7 @@ function shell(content: HTMLElement) {
   app.replaceChildren(
     el("header", { class: "top" },
       el("a", { class: "brand", href: "/" }, "Mockup"),
+      el("nav", { class: "nav" }, el("a", { href: "/" }, "Stills"), el("a", { href: `/video/${devices[0].id}/` }, "Video")),
       el("span", { class: "note" }, "Rendered locally with Rust + WebAssembly · nothing is uploaded")),
     el("main", {}, content),
     el("footer", {}, "3D models are original, built from published dimensions (sources and estimated values are listed on each device page). Not manufacturer assets; product names are used descriptively."),
@@ -356,6 +358,7 @@ function devicePage(d: Device) {
     specs(d));
   shell(el("div", {}, el("a", { href: "/", class: "back", textContent: "← All devices" }),
     el("div", { class: "layout" }, stage, panel)));
+  panel.prepend(el("a", { class: "vidlink", href: `/video/${d.id}/` }, "🎬 Make a 3D video mockup of this device →"));
   drawSw(); drawOri(); drawBgs(); drawList(); refresh();
   currentLoad = (fs) => void load(fs);
 }
@@ -375,15 +378,38 @@ window.addEventListener("paste", (e) => {
   if (fs.length && currentLoad) currentLoad(fs);
 });
 
+let disposePage: (() => void) | null = null;
+
+function videoRoute(d: Device) {
+  document.title = `${d.name} video mockup – Mockup`;
+  const picker = el("select", {});
+  picker.setAttribute("aria-label", "Device");
+  for (const x of devices) picker.append(el("option", { value: x.id, textContent: `${x.brand} ${x.name}`, selected: x.id === d.id }));
+  picker.onchange = () => { history.pushState(null, "", `/video/${picker.value}/`); route(); };
+  import("./video/videoPage").then(({ videoPage }) => {
+    if (location.pathname.replace(/\/$/, "") !== `/video/${d.id}`) return; // navigated away while loading
+    const p = videoPage(d as unknown as DeviceSpec);
+    shell(el("div", {}, el("div", { class: "row tight" }, el("label", { class: "fine" }, "Device "), picker), p.el));
+    disposePage = p.dispose;
+    currentLoad = p.load;
+  }).catch((e) => shell(el("div", {}, el("h1", {}, "Video studio failed to load"), el("p", { class: "sub" }, String(e?.message ?? e)))));
+  shell(el("p", { class: "sub" }, "Loading 3D engine…"));
+}
+
 function route() {
+  disposePage?.();
+  disposePage = null;
   const m = location.pathname.match(/^\/model\/([\w-]+)\/?$/);
-  const d = m && devices.find((x) => x.id === m[1]);
+  const v = location.pathname.match(/^\/video\/([\w-]+)\/?$/);
+  const d = (m || v) && devices.find((x) => x.id === (m || v)![1]);
   currentLoad = null;
   document.title = "Mockup – device mockups in your browser";
   window.scrollTo(0, 0);
-  if (d) {
+  if (d && v) {
+    videoRoute(d);
+  } else if (d) {
     devicePage(d);
-  } else if (m) {
+  } else if (m || v) {
     shell(el("div", {}, el("h1", {}, "Device not found"), el("a", { href: "/" }, "Back to all devices")));
   } else home();
 }
