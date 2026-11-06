@@ -172,6 +172,38 @@ export function videoPage(d: DeviceSpec): VideoPage {
     loadMedia(f).then(() => say("")).catch((e) => say((e as Error).message, true));
   };
 
+  /** Puts the library's video-selected screenshots on the device: one image, or a cross-fading sequence. */
+  const useLibrary = async () => {
+    const shots = library.get("video").filter((x) => !x.framed);
+    if (!shots.length) return false;
+    if (shots.length === 1) { await loadMedia(shots[0].file); return true; }
+    const frames = await Promise.all(shots.map((x) => createImageBitmap(x.file)));
+    const aspect = d.screen.w / d.screen.h;
+    const cv = document.createElement("canvas");
+    cv.width = aspect >= 1 ? 1920 : Math.round(1920 * aspect); cv.height = aspect >= 1 ? Math.round(1920 / aspect) : 1920;
+    clearMedia();
+    slideshow = { frames, canvas: cv };
+    st.media = { file: shots[0].file, url: URL.createObjectURL(shots[0].file), kind: "image", duration: 0 };
+    paintSlideshow(0);
+    stage.setMedia({ kind: "image", el: cv, w: cv.width, h: cv.height, live: true });
+    hint.style.display = "none";
+    mediaInfo.textContent = `${shots.length} screens from your library, cross-fading across the clip`;
+    st.duration = Math.min(60, Math.max(st.duration, shots.length * 2.5)); durIn.value = String(st.duration); durOut.textContent = String(st.duration);
+    syncExportInfo();
+    dirty = true;
+    return true;
+  };
+  const libInfo = h("p", { class: "fine" });
+  const libBtn = h("button", { class: "chip", textContent: "Use library screens" });
+  libBtn.onclick = () => { void useLibrary().then((ok) => say(ok ? "" : "No screenshots are selected for video. Choose some in the Guided studio.", !ok)).catch((e) => say((e as Error).message, true)); };
+  const syncLib = () => {
+    const n = library.get("video").filter((x) => !x.framed).length;
+    libInfo.replaceChildren(`Library: ${n} screenshot${n === 1 ? "" : "s"} selected for video. `, h("a", { href: "/studio/" }, "Choose in the Guided studio →"));
+    libBtn.disabled = n === 0;
+  };
+  const unsubLib = library.on(syncLib);
+  syncLib();
+
   const file = h("input", { type: "file", accept: "image/png,image/jpeg,image/webp,video/mp4,video/webm,video/quicktime", hidden: true });
   const drop = h("div", { class: "drop", tabIndex: 0, role: "button" }, h("strong", {}, "Upload an image or screen recording"), h("u", {}, "Or browse files"));
   drop.setAttribute("aria-label", "Upload media");
@@ -453,7 +485,7 @@ export function videoPage(d: DeviceSpec): VideoPage {
 
   // ---------- assemble ----------
   const side = h("div", { class: "side" },
-    card("Screen media", drop, file, mediaInfo, h("div", { class: "row tight" }, fitSel, fitBtn)),
+    card("Screen media", drop, file, mediaInfo, h("div", { class: "row tight" }, fitSel, fitBtn), libInfo, h("div", { class: "row tight" }, libBtn)),
     card("Device", cname, sw, isHandheld ? h("div", { class: "row tight" }, layoutSel) : h("span"),
       slider("Screen gloss", 0, 1, 0.05, DEFAULT_SETTINGS.glare, (v) => set("glare", v))),
     card("Camera animation", presetSel, presetHint, durLabel, easeSel,
