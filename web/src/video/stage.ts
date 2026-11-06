@@ -261,6 +261,7 @@ export class Stage {
     this.camera.lookAt(off);
     this.camera.rotateZ((pose.roll * Math.PI) / 180);
     if (this.media?.kind === "video" && this.texture && this.media.el.readyState >= 2) this.texture.needsUpdate = true;
+    if (this.media?.kind === "image" && this.media.live && this.texture) this.texture.needsUpdate = true;
     this.updateBackground();
     this.renderer.render(this.scene, this.camera);
   }
