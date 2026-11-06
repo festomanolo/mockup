@@ -203,3 +203,6 @@ main:has(.slayout) { max-width: 1480px; }
   .pcard { padding: 14px; }
   .row > .fld { flex: 1 1 100%; }
   .shead strong { flex: 1 1 100%; }
+  .shead select { max-width: 100%; flex: 1 1 40%; }
+  .cfh .fine { flex: 1 1 100%; order: 3; }
+  .sslide { height: min(28vh, 260px); }
