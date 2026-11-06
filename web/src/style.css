@@ -174,3 +174,4 @@ progress { width: 100%; margin-top: 10px; }
 @media (prefers-color-scheme: dark) { .fld > span { color: #8b93a1; } }
 
 .studios { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.studio { display: grid; gap: 2px; padding: 14px 18px; border-radius: 12px; background: #0b46f0; color: #fff; transition: transform .15s; }
