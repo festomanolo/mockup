@@ -373,7 +373,7 @@ export function videoPage(d: DeviceSpec): VideoPage {
   const exportInfo = h("p", { class: "fine" });
   /** Transparent output needs a format with alpha: WebM when the browser can encode it, else PNG frames. */
   const effectiveFormat = (): "mp4" | "webm" | "png" => st.format;
-    return st.alphaWebm ? "webm" : "png";
+  /** True when the clip will really carry alpha (only WebM-with-alpha or PNG frames can). */
   };
   function syncExportInfo() {
     const transparent = stage.settings.bg.kind === "transparent";
