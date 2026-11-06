@@ -396,6 +396,18 @@ function videoRoute(d: Device) {
   shell(el("p", { class: "sub" }, "Loading 3D engine…"));
 }
 
+function storeRoute() {
+  document.title = "Store listing studio – Mockup";
+  import("./store/storePage").then(({ storePage }) => {
+    if (!/^\/store\/?$/.test(location.pathname)) return;
+    const p = storePage(devices as unknown as import("./store/storePage").StoreDevice[]);
+    shell(p.el);
+    disposePage = p.dispose;
+    currentLoad = p.load;
+  }).catch((e) => shell(el("div", {}, el("h1", {}, "Store studio failed to load"), el("p", { class: "sub" }, String(e?.message ?? e)))));
+  shell(el("p", { class: "sub" }, "Loading…"));
+}
+
 function route() {
   disposePage?.();
   disposePage = null;
