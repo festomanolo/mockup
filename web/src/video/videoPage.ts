@@ -381,7 +381,7 @@ export function videoPage(d: DeviceSpec): VideoPage {
     const [w, hh] = dims();
     const frames = Math.round(st.duration * st.fps);
     const label = f === "png" ? "PNG sequence in a ZIP" : f === "webm" ? "WebM" : "MP4";
-    const note = transparent ? (f === "png" && st.format !== "png" ? " · this browser cannot write transparent video, so frames are exported as transparent PNGs" : " · transparent") : "";
+    const note = !transparent ? "" : keepsAlpha() ? " · transparent" : " · transparent background will be flattened onto black (pick WebM or PNG sequence for real transparency)";
     exportInfo.textContent = `${w}×${hh} · ${frames} frames · ${label}${note}${f === "png" && frames > MAX_PNG_FRAMES ? ` · over the ${MAX_PNG_FRAMES}-frame limit` : ""}`;
   }
   void alphaWebmSupported().then((ok) => { st.alphaWebm = ok; syncExportInfo(); });
