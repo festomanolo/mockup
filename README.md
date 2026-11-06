@@ -18,6 +18,7 @@ The renderer is Rust compiled to WebAssembly, running in a pool of Web Workers. 
 ## Guided studio (`/studio/`)
 
 Upload raw screenshots once. They are placed in the selected device, and the most detailed, most distinct ones are suggested for the **video** (top 3 raw screens) and the **store listing** (up to 8). A duplicate/blank detector (perceptual hash + contrast) flags near-copies and empty screens, and transparent PNGs are recognised as **finished mockups**. You toggle Video / Store / Finished mockup per screenshot, then continue: the video studio plays the chosen screens on the 3D device in a cross-fading sequence, and the store listing starts with the store screens. The library lives for the browser session.
+
 ## Store listing studio (`/store/`)
 
 Builds App Store and Google Play listing graphics and text.
