@@ -13,5 +13,10 @@
     "@types/three": "^0.187.0",
     "typescript": "~5.9.0",
     "vite": "^7.0.0"
+  },
+  "dependencies": {
+    "mp4-muxer": "^5.2.2",
+    "three": "^0.187.0",
+    "webm-muxer": "^5.1.4"
   }
 }
