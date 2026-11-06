@@ -262,10 +262,13 @@ export async function renderSlide(canvas: HTMLCanvasElement, L: Listing, A: Asse
   const jobs: Job[] = [];
   for (const { j, lay } of lays) {
     for (const place of lay.devices) {
+      const pick = pickShot(A, L.slides[j].shot, j, place.shotOffset);
+      // a pre-made mockup keeps the layout's height but uses its own aspect ratio
+      const aP = "framed" in pick ? pick.framed.w / pick.framed.h : a;
+      const w = Math.min(W * 0.98, (place.w / a) * aP);
       const off = (j - i) * W + place.x;
-      if (Math.abs(off - W / 2) > W / 2 + place.w * 0.85) continue; // not visible on this slide
-      const need = Math.ceil(place.w / a);
-      jobs.push({ j, place, bmp: deviceBitmap(deviceId, L.finish, pickShot(A, L.slides[j].shot, j, place.shotOffset), need) });
+      if (Math.abs(off - W / 2) > W / 2 + w * 0.85) continue; // not visible on this slide
+      jobs.push({ j, place: { ...place, w }, bmp: pickBitmap(deviceId, L.finish, pick, w, a).bmp, w });
     }
   }
   const bmps = await Promise.all(jobs.map((x) => x.bmp));
@@ -288,6 +291,14 @@ export async function renderSlide(canvas: HTMLCanvasElement, L: Listing, A: Asse
   const s = L.slides[i];
   const lay = lays.find((x) => x.j === i)!.lay;
   drawText(c, L, lay.text, s.headline, s.sub, W, inkFor(L, i, n));
+}
+
+/** Small thumbnail of a background gradient with one shape layer, for the style gallery. */
+export function renderShapePreview(canvas: HTMLCanvasElement, bg: Gradient, layer: import("./model").ShapeLayer) {
+  const c = canvas.getContext("2d")!, W = canvas.width, H = canvas.height;
+  c.fillStyle = makeGradient(c, bg, 0, 0, W, H); c.fillRect(0, 0, W, H);
+  const dark = lum(gradAt(bg, 0.5)) > 0.62;
+  drawShapes(c, { ...layer, opacity: Math.max(layer.opacity, 0.7) }, { W: W * 0.7, H, j0: 0, j1: 2, x0: 0, x1: W }, dark);
 }
 
 // ---------- public: Google Play feature graphic (1024×500) ----------
