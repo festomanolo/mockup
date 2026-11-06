@@ -119,7 +119,9 @@ export function videoPage(d: DeviceSpec): VideoPage {
   const status = h("div", { class: "status", role: "status" });
   const say = (m: string, err = false) => { status.textContent = m; status.className = "status" + (err ? " err" : ""); };
 
+  const clearSlideshow = () => { slideshow?.frames.forEach((f) => f.close()); slideshow = null; };
   const clearMedia = () => {
+    clearSlideshow();
     if (videoEl) { videoEl.pause(); videoEl.removeAttribute("src"); videoEl.load(); }
     videoEl = null;
     if (st.media) URL.revokeObjectURL(st.media.url);
