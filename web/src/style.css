@@ -196,3 +196,5 @@ main:has(.slayout) { max-width: 1480px; }
   .sstrip-note { font-size: 11px; }
 }
 @media (max-width: 560px) {
+  main { padding: 16px 14px 48px; }
+  header.top { padding: 10px 14px; flex-wrap: wrap; gap: 8px 14px; }
