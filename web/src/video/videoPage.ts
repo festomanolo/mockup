@@ -398,6 +398,7 @@ export function videoPage(d: DeviceSpec): VideoPage {
     gen.disabled = true; bar.hidden = false; cancel.hidden = false; bar.value = 0;
     const [w, hh] = dims();
     const format = effectiveFormat();
+    const transparent = keepsAlpha();
     const restore = stage.enterExport(w, hh);
     const audioSrc = st.audioFile ?? (st.useVideoAudio && st.media?.kind === "video" ? st.media.file : null);
     const t0 = performance.now();
