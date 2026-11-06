@@ -405,7 +405,9 @@ function route() {
   currentLoad = null;
   document.title = "Mockup – device mockups in your browser";
   window.scrollTo(0, 0);
-  if (d) {
+  if (d && v) {
+    videoRoute(d);
+  } else if (d) {
     devicePage(d);
   } else if (m) {
     shell(el("div", {}, el("h1", {}, "Device not found"), el("a", { href: "/" }, "Back to all devices")));
