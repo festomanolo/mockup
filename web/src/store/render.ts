@@ -111,27 +111,20 @@ function bgAt(L: Listing, i: number, n: number): [number, number, number] {
   return gradAt(L.bg, L.seamless && n > 1 ? (i + 0.5) / n : 0.5);
 }
 function inkFor(L: Listing, i: number, n: number): { fg: string; soft: string; dark: boolean } {
+  if (L.textColor === "custom") {
+    const [r, g, b] = rgb(L.textCustom);
+    return { fg: L.textCustom, soft: `rgba(${r},${g},${b},.78)`, dark: lum([r, g, b]) < 0.5 };
+  }
   const dark = L.textColor === "auto" ? lum(bgAt(L, i, n)) > 0.62 : L.textColor === "dark";
   return dark ? { fg: "#0d1117", soft: "rgba(13,17,23,.72)", dark } : { fg: "#ffffff", soft: "rgba(255,255,255,.8)", dark };
 }
-const frac = (v: number) => v - Math.floor(v);
-const noise = (j: number, k: number) => frac(Math.sin(j * 127.1 + k * 311.7) * 43758.5453);
 
 // ---------- drawing pieces ----------
 type C = CanvasRenderingContext2D;
 
 function drawBackground(c: C, L: Listing, i: number, n: number, W: number, H: number) {
-  const cs = paletteColors(L);
-  if (L.seamless) {
-    const g = c.createLinearGradient(-i * W, 0, (n - i) * W, 0);
-    cs.forEach((col, k) => g.addColorStop(cs.length === 1 ? 0 : k / (cs.length - 1), col));
-    c.fillStyle = g;
-  } else {
-    const g = c.createLinearGradient(0, 0, W * 0.4, H);
-    g.addColorStop(0, cs[i % cs.length]);
-    g.addColorStop(1, cs[(i + 1) % cs.length]);
-    c.fillStyle = g;
-  }
+  const seamless = L.seamless && n > 1;
+  c.fillStyle = seamless ? makeGradient(c, L.bg, -i * W, 0, n * W, H) : makeGradient(c, L.bg, 0, 0, W, H);
   c.fillRect(0, 0, W, H);
   // soft light blobs in panorama space, so neighbouring slides share them
   for (let j = i - 1; j <= i + 1; j++) {
