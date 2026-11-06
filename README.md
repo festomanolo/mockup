@@ -15,6 +15,8 @@ The renderer is Rust compiled to WebAssembly, running in a pool of Web Workers. 
 - **Backgrounds and shadows:** transparent, solid, 6 gradient presets plus a custom two-colour gradient with angle; padding (none/small/medium/large); soft, floating and contact shadows with a strength slider. Shadows are blurred from the device's own silhouette (two layers: ambient + contact), the canvas grows to fit, and the choice is remembered in the browser. Defaults: transparent background, small padding, soft shadow.
 - **Galaxy S24 Ultra detail (tilted views):** camera angle fitted to MockUPhone's right/left exports (screen corners give a 44° tilt and 35° spin); grey cover-glass bezel with black hairlines, thin titanium lip and groove, rounder 3D corners, and a wall shader that paints the SIM tray and pin hole, mic, USB-C, speaker grille, S Pen, antenna bands and side buttons. Positions are measured from those exports and listed under `details` in `core/devices.json`, so other models can get the same treatment once measured.
 
+## Store listing studio (`/store/`)
+
 
 ## Video mockups (`/video/<device>/`)
 
