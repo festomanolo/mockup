@@ -233,18 +233,31 @@ function drawText(c: C, L: Listing, p: TextPlace, headline: string, sub: string,
 }
 
 // ---------- public: slide ----------
-const pickShot = (A: Assets, shot: number | null, j: number, off: number): number | null => {
-  if (A.shots.length) return A.shots[((shot ?? j) + off) % A.shots.length].id;
-  if (A.placeholders.length) return A.placeholders[((shot ?? j) + off) % A.placeholders.length];
-  return null;
+type Pick = { framed: Shot } | { id: number | null };
+const pickShot = (A: Assets, shot: number | null, j: number, off: number): Pick => {
+  if (A.shots.length) {
+    const s = A.shots[((shot ?? j) + off) % A.shots.length];
+    return s.framed ? { framed: s } : { id: s.id };
+  }
+  if (A.placeholders.length) return { id: A.placeholders[((shot ?? j) + off) % A.placeholders.length] };
+  return { id: null };
 };
+
+/** Bitmap for a pick: the screenshot inside the chosen device, or a pre-made mockup as it is. */
+function pickBitmap(deviceId: string, finish: number, pick: Pick, devW: number, a: number): { bmp: Promise<ImageBitmap>; w: number } {
+  if ("framed" in pick) {
+    const aP = pick.framed.w / pick.framed.h;
+    return { bmp: framedBitmap(pick.framed, devW * 1.0), w: aP };
+  }
+  return { bmp: deviceBitmap(deviceId, finish, pick.id, Math.ceil(devW / a)), w: a };
+}
 
 export async function renderSlide(canvas: HTMLCanvasElement, L: Listing, A: Assets, i: number, W: number, H: number, kind: "phone" | "tablet") {
   const n = L.slides.length;
   const deviceId = kind === "tablet" ? L.tabletId : L.deviceId;
   const a = await deviceAspect(deviceId, L.finish);
   const js = [i - 1, i, i + 1].filter((j) => j >= 0 && j < n);
-  type Job = { j: number; place: ReturnType<typeof layout>["devices"][number]; bmp: Promise<ImageBitmap> };
+  type Job = { j: number; place: ReturnType<typeof layout>["devices"][number]; bmp: Promise<ImageBitmap>; w: number };
   const lays = js.map((j) => ({ j, lay: layout(L.slides[j].template, W, H, a) }));
   const jobs: Job[] = [];
   for (const { j, lay } of lays) {
