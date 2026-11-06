@@ -18,7 +18,7 @@ const fail = (m) => { console.error("FAIL:", m); process.exitCode = 1; };
 const server = spawn("npx", ["vite", "preview", "--port", String(port), "--strictPort"], { cwd: join(root, "web"), stdio: "ignore" });
 await new Promise((r) => setTimeout(r, 2500));
 const browser = await puppeteer.launch({
-  executablePath: chrome, headless: "new",
+  executablePath: chrome, headless: "new", protocolTimeout: 900000,
   args: ["--no-sandbox", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--allow-file-access-from-files"],
 });
 try {
