@@ -171,6 +171,8 @@ function wrap(c: C, text: string, maxW: number): string[] {
 function balanced(c: C, text: string, maxW: number): string[] {
   const base = wrap(c, text, maxW);
   if (base.length < 2) return base;
+  let best = base;
+  for (let w = maxW * 0.96; w > maxW * 0.45; w -= maxW * 0.04) {
 function drawText(c: C, L: Listing, p: TextPlace, headline: string, sub: string, W: number, ink: { fg: string; soft: string }) {
   if (!headline.trim() && !sub.trim()) return;
   const f = FONTS[L.font];
