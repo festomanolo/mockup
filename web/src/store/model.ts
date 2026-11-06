@@ -37,7 +37,26 @@ export const FONTS = {
 } as const;
 export type FontId = keyof typeof FONTS;
 
+export type Stop = { c: string; p: number };
+export type Gradient = { type: "linear" | "radial"; angle: number; stops: Stop[] };
+export type ShapeStyleId =
+  | "none" | "blobs" | "bubbles" | "rings" | "waves" | "dunes" | "diagonals" | "dots" | "grid" | "triangles" | "hexagons"
+  | "sparkles" | "ribbons" | "arcs" | "aurora" | "confetti" | "contours" | "squares" | "scales";
+export type ShapeLayer = { style: ShapeStyleId; tone: "auto" | "light" | "dark" | "custom"; color: string; opacity: number; scale: number; seed: number };
+export const SHAPE_STYLES: { id: ShapeStyleId; label: string }[] = [
+  { id: "blobs", label: "Blobs" }, { id: "bubbles", label: "Bubbles" }, { id: "rings", label: "Rings" }, { id: "waves", label: "Waves" },
+  { id: "dunes", label: "Dunes" }, { id: "diagonals", label: "Diagonals" }, { id: "dots", label: "Halftone" }, { id: "grid", label: "Grid" },
+  { id: "triangles", label: "Triangles" }, { id: "hexagons", label: "Honeycomb" }, { id: "sparkles", label: "Sparkles" }, { id: "ribbons", label: "Ribbons" },
+  { id: "arcs", label: "Arcs" }, { id: "aurora", label: "Aurora" }, { id: "confetti", label: "Confetti" }, { id: "contours", label: "Flow lines" },
+  { id: "squares", label: "Squares" }, { id: "scales", label: "Scales" },
+];
+export const newShape = (style: ShapeStyleId = "blobs"): ShapeLayer => ({ style, tone: "auto", color: "#ffffff", opacity: 0.6, scale: 1, seed: Math.floor(Math.random() * 1000) });
+
 export type Palette = { id: string; name: string; colors: string[] };
+/** Evenly spaced stops for a list of colours. */
+export const gradFromColors = (colors: string[], angle = 100, type: Gradient["type"] = "linear"): Gradient => ({
+  type, angle, stops: colors.map((c, k) => ({ c, p: colors.length === 1 ? 0 : k / (colors.length - 1) })),
+});
 /** Hand-picked gradients; the first colour leads the panorama, the rest follow across the slides. */
 export const PALETTES: Palette[] = [
   { id: "aurora", name: "Aurora", colors: ["#1f2a6b", "#6a3df0", "#14c8e0"] },
