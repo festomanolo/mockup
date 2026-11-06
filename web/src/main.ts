@@ -414,6 +414,18 @@ function storeRoute() {
   shell(el("p", { class: "sub" }, "Loading…"));
 }
 
+function studioRoute() {
+  document.title = "Guided studio – Mockup";
+  import("./wizard/wizardPage").then(({ wizardPage }) => {
+    if (!/^\/studio\/?$/.test(location.pathname)) return;
+    const p = wizardPage(devices as unknown as import("./wizard/wizardPage").WizardDevice[]);
+    shell(p.el);
+    disposePage = p.dispose;
+    currentLoad = p.load;
+  }).catch((e) => shell(el("div", {}, el("h1", {}, "Guided studio failed to load"), el("p", { class: "sub" }, String(e?.message ?? e)))));
+  shell(el("p", { class: "sub" }, "Loading…"));
+}
+
 function route() {
   disposePage?.();
   disposePage = null;
@@ -423,7 +435,9 @@ function route() {
   currentLoad = null;
   document.title = "Mockup – device mockups in your browser";
   window.scrollTo(0, 0);
-  if (/^\/store\/?$/.test(location.pathname)) {
+  if (/^\/studio\/?$/.test(location.pathname)) {
+    studioRoute();
+  } else if (/^\/store\/?$/.test(location.pathname)) {
     storeRoute();
   } else if (d && v) {
     videoRoute(d);
