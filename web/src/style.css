@@ -183,3 +183,6 @@ main:has(.slayout) { max-width: 1480px; }
 .slayout > * { min-width: 0; }
 .slayout .vcol { top: 12px; }
 .sstage { overflow: hidden; }
+.sstrip { max-width: 100%; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+.slide input, .slide select, .shead select { min-width: 0; }
+.shead select { max-width: 46%; }
