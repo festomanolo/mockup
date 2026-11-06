@@ -11,6 +11,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const chrome = process.env.CHROME ?? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const port = 5189;
 const out = mkdtempSync(join(tmpdir(), "mockup-video-e2e-"));
+const RES = process.env.RES ?? "1280", DUR = process.env.DUR ?? "2", AUDIO = !!process.env.AUDIO;
 const device = process.env.DEVICE ?? "macbook-pro-14";
 const fail = (m) => { console.error("FAIL:", m); process.exitCode = 1; };
 
