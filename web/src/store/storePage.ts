@@ -221,31 +221,12 @@ export function storePage(devices: StoreDevice[]): { el: HTMLElement; load: (fil
   drop.onclick = () => fileIn.click();
   drop.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileIn.click(); } };
   fileIn.onchange = () => { void addFiles([...(fileIn.files ?? [])]); fileIn.value = ""; };
+  const mockBtn = h("button", { class: "chip", textContent: "Add finished mockups…" });
+  mockBtn.onclick = () => mockIn.click();
+  mockIn.onchange = () => { void addFiles([...(mockIn.files ?? [])], true); mockIn.value = ""; };
+  const unsub = library.on(() => { syncShots(); drawShots(); rebuildSlides(); schedule(); });
 
   // ---------- design ----------
-  const palRow = h("div", { class: "bgs" });
-  const customRow = h("div", { class: "row tight" });
-  const gradCss = (cs: string[]) => `linear-gradient(135deg, ${cs.join(", ")})`;
-  function drawPalettes() {
-    palRow.replaceChildren(...PALETTES.map((p) => {
-      const b = h("button", { class: "bgchip", title: p.name });
-      b.setAttribute("aria-label", `${p.name} palette`);
-      b.setAttribute("aria-pressed", String(L.palette === p.id));
-      b.style.background = gradCss(p.colors);
-      b.onclick = () => { L.palette = p.id; L.custom = [...p.colors]; drawPalettes(); schedule(); };
-      return b;
-    }), (() => {
-      const b = h("button", { class: "chip", textContent: "Custom" });
-      b.setAttribute("aria-pressed", String(L.palette === "custom"));
-      b.onclick = () => { L.palette = "custom"; drawPalettes(); schedule(); };
-      return b;
-    })());
-    customRow.replaceChildren(...(L.palette === "custom" ? L.custom.map((c, k) => {
-      const inp = aria(h("input", { type: "color", value: c }), `Custom colour ${k + 1}`);
-      inp.oninput = () => { L.custom[k] = inp.value; schedule(); };
-      return inp;
-    }) : []));
-  }
   const sel = (label: string, opts: [string, string][], value: string, on: (v: string) => void) => {
     const s = aria(h("select"), label);
     for (const [v, t] of opts) s.append(h("option", { value: v, textContent: t }));
@@ -265,7 +246,10 @@ export function storePage(devices: StoreDevice[]): { el: HTMLElement; load: (fil
   finishSel.onchange = () => { L.finish = Number(finishSel.value); schedule(); };
   fillFinish();
   const fontSel = sel("Headline font", Object.entries(FONTS).map(([k, f]): [string, string] => [k, f.label]), L.font, (v) => { L.font = v as FontId; schedule(); });
-  const inkSel = sel("Text colour", [["auto", "Auto (best contrast)"], ["light", "Light"], ["dark", "Dark"]], L.textColor, (v) => { L.textColor = v as Listing["textColor"]; schedule(); });
+  const inkCustom = aria(h("input", { type: "color", value: L.textCustom }), "Custom text colour");
+  inkCustom.oninput = () => { L.textCustom = inkCustom.value; schedule(); };
+  const inkSel = sel("Text colour", [["auto", "Auto (best contrast)"], ["light", "Light"], ["dark", "Dark"], ["custom", "Custom…"]], L.textColor, (v) => { L.textColor = v as Listing["textColor"]; inkCustom.style.display = v === "custom" ? "" : "none"; schedule(); });
+  inkCustom.style.display = L.textColor === "custom" ? "" : "none";
   const seamless = h("input", { type: "checkbox", checked: L.seamless });
   seamless.onchange = () => { L.seamless = seamless.checked; schedule(); };
   const kindSel = sel("Preview as", [["phone", "Preview: phone"], ["tablet", "Preview: tablet"]], previewKind, (v) => { previewKind = v as "phone" | "tablet"; schedule(); });
