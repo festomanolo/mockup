@@ -252,3 +252,130 @@ export function storePage(devices: StoreDevice[]): { el: HTMLElement; load: (fil
     for (const [v, t] of opts) s.append(h("option", { value: v, textContent: t }));
     s.value = value; s.onchange = () => on(s.value);
     return s;
+  };
+  const devOpts = screens.map((d): [string, string] => [d.id, `${d.brand} ${d.name}`]);
+  const finishSel = aria(h("select"), "Device colour");
+  const fillFinish = () => {
+    const d = screens.find((x) => x.id === L.deviceId)!;
+    finishSel.replaceChildren(...d.finishes.map((f, k) => h("option", { value: String(k), textContent: f.name })));
+    if (L.finish >= d.finishes.length) L.finish = 0;
+    finishSel.value = String(L.finish);
+  };
+  const phoneSel = sel("Phone device", devOpts, L.deviceId, (v) => { L.deviceId = v; fillFinish(); schedule(); });
+  const tabletSel = sel("Tablet device", devOpts, L.tabletId, (v) => { L.tabletId = v; schedule(); });
+  finishSel.onchange = () => { L.finish = Number(finishSel.value); schedule(); };
+  fillFinish();
+  const fontSel = sel("Headline font", Object.entries(FONTS).map(([k, f]): [string, string] => [k, f.label]), L.font, (v) => { L.font = v as FontId; schedule(); });
+  const inkSel = sel("Text colour", [["auto", "Auto (best contrast)"], ["light", "Light"], ["dark", "Dark"]], L.textColor, (v) => { L.textColor = v as Listing["textColor"]; schedule(); });
+  const seamless = h("input", { type: "checkbox", checked: L.seamless });
+  seamless.onchange = () => { L.seamless = seamless.checked; schedule(); };
+  const kindSel = sel("Preview as", [["phone", "Preview: phone"], ["tablet", "Preview: tablet"]], previewKind, (v) => { previewKind = v as "phone" | "tablet"; schedule(); });
+
+  // ---------- slides ----------
+  const slideBox = h("div", { class: "slides" });
+  const fixBridges = () => {
+    L.slides.forEach((s, i) => {
+      if (s.template === "bridge" && i + 1 >= L.slides.length) s.template = "crop";
+      if (s.template === "bridge" && L.slides[i + 1].template !== "tail") L.slides[i + 1].template = "tail";
+      if (s.template === "tail" && L.slides[i - 1]?.template !== "bridge") s.template = "hero";
+    });
+  };
+  function select(i: number) {
+    selected = Math.max(0, Math.min(L.slides.length - 1, i));
+    markSelected();
+    [...slideBox.children].forEach((c, k) => c.classList.toggle("on", k === selected));
+    slideBox.children[selected]?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }
+  function rebuildSlides() {
+    fixBridges();
+    slideBox.replaceChildren(...L.slides.map((s, i) => {
+      const hl = aria(h("input", { type: "text", maxLength: 80, value: s.headline, placeholder: "Headline (≤ 6 words)" }), `Slide ${i + 1} headline`);
+      const wc = h("span", { class: "wc" });
+      const upd = () => { const n = s.headline.trim() ? s.headline.trim().split(/\s+/).length : 0; wc.textContent = `${n}/${LIMITS.headlineWords} words`; wc.classList.toggle("bad", n > LIMITS.headlineWords); };
+      upd();
+      hl.oninput = () => { s.headline = hl.value; upd(); schedule(); };
+      const sub = aria(h("input", { type: "text", maxLength: 160, value: s.sub, placeholder: "One supporting line" }), `Slide ${i + 1} sub-line`);
+      sub.oninput = () => { s.sub = sub.value; schedule(); };
+      const tpl = aria(h("select"), `Slide ${i + 1} layout`);
+      for (const t of TEMPLATES) tpl.append(h("option", { value: t.id, textContent: t.label, title: t.hint }));
+      tpl.value = s.template;
+      tpl.onchange = () => { s.template = tpl.value as TemplateId; rebuildSlides(); schedule(); };
+      const shot = aria(h("select"), `Slide ${i + 1} screenshot`);
+      shot.append(h("option", { value: "", textContent: "Screen: auto" }));
+      A.shots.forEach((_, k) => shot.append(h("option", { value: String(k), textContent: `Screen ${k + 1}` })));
+      shot.value = s.shot === null ? "" : String(s.shot);
+      shot.onchange = () => { s.shot = shot.value === "" ? null : Number(shot.value); schedule(); };
+      const btn = (txt: string, title: string, fn: () => void, dis = false) => {
+        const b = h("button", { class: "rm2", textContent: txt, title, disabled: dis });
+        b.setAttribute("aria-label", `${title} (slide ${i + 1})`);
+        b.onclick = (e) => { e.stopPropagation(); fn(); };
+        return b;
+      };
+      const move = (d: number) => { const j = i + d; [L.slides[i], L.slides[j]] = [L.slides[j], L.slides[i]]; selected = j; rebuildSlides(); schedule(); };
+      const regen = btn("✨", "Rewrite with AI", async () => {
+        const why = aiReady();
+        if (why) return say(why, true);
+        aiAbort = new AbortController(); setBusy(true); say(`Rewriting slide ${i + 1}…`);
+        try {
+          const r = await regenerateSlide(ai, brief(), L.slides.map((x) => ({ headline: x.headline, sub: x.sub })), i, aiAbort.signal);
+          s.headline = r.headline; s.sub = r.sub; rebuildSlides(); schedule(); say("Done.");
+        } catch (e) { say((e as Error).name === "AbortError" ? "Stopped." : (e as Error).message, (e as Error).name !== "AbortError"); }
+        finally { setBusy(false); aiAbort = null; }
+      });
+      const head = h("div", { class: "shead" }, h("strong", {}, `Slide ${i + 1}`), tpl, shot,
+        btn("↑", "Move up", () => move(-1), i === 0), btn("↓", "Move down", () => move(1), i === L.slides.length - 1), regen,
+        btn("×", "Remove slide", () => { L.slides.splice(i, 1); selected = Math.min(selected, L.slides.length - 1); rebuildSlides(); schedule(); }, L.slides.length <= 1));
+      const box = h("div", { class: "slide" + (i === selected ? " on" : "") }, head, hl, wc, sub);
+      box.onfocusin = () => { if (selected !== i) { selected = i; markSelected(); [...slideBox.children].forEach((c, k) => c.classList.toggle("on", k === i)); } };
+      return box;
+    }));
+  }
+  const addSlide = h("button", { class: "chip", textContent: "+ Add slide" });
+  addSlide.onclick = () => {
+    if (L.slides.length >= 10) return;
+    L.slides.push({ id: newId(), template: autoTemplates(L.slides.length + 1)[L.slides.length], headline: "", sub: "", shot: null });
+    selected = L.slides.length - 1; rebuildSlides(); schedule();
+  };
+
+  // ---------- store text ----------
+  const copyBox = h("div", { class: "copyfields" });
+  function rebuildCopy() {
+    copyBox.replaceChildren(...COPY_FIELDS.map((f) => {
+      const ta = aria(h("textarea", { rows: f.rows, value: L.copy[f.key] }), f.label);
+      const cnt = h("span", { class: "wc" });
+      const upd = () => { cnt.textContent = `${ta.value.length}/${f.max}`; cnt.classList.toggle("bad", ta.value.length > f.max); };
+      upd();
+      ta.oninput = () => { L.copy[f.key] = ta.value; upd(); persist(); };
+      const cp = h("button", { class: "chip", textContent: "Copy" });
+      cp.onclick = () => { void navigator.clipboard?.writeText(ta.value).then(() => { cp.textContent = "Copied"; setTimeout(() => (cp.textContent = "Copy"), 1200); }).catch(() => {}); };
+      return h("div", { class: "cf" }, h("div", { class: "cfh" }, h("strong", {}, f.label), h("span", { class: "fine" }, f.note), cnt, cp), ta);
+    }));
+  }
+
+  // ---------- export ----------
+  const exportSel = new Set<string>(["ios-iphone-69", "play-phone"]);
+  const fmtSel = sel("Image format", [["image/png", "PNG (sharpest text)"], ["image/jpeg", "JPEG (smaller files)"]], "image/png", () => {});
+  const featChk = h("input", { type: "checkbox", checked: true });
+  const iconIn = aria(h("input", { type: "file", accept: "image/png,image/jpeg,image/webp" }), "App icon");
+  iconIn.onchange = () => {
+    const f = iconIn.files?.[0];
+    if (icon) URL.revokeObjectURL(icon.url);
+    icon = f ? { blob: f, url: URL.createObjectURL(f) } : null;
+  };
+  const targetBoxes = TARGETS.map((t) => {
+    const cb = h("input", { type: "checkbox", checked: exportSel.has(t.id) });
+    cb.onchange = () => { if (cb.checked) exportSel.add(t.id); else exportSel.delete(t.id); };
+    return h("label", { class: "chk" }, cb, ` ${t.label}`);
+  });
+  const exStatus = h("p", { class: "status", role: "status" });
+  const exBar = h("progress", { max: 1, value: 0, hidden: true });
+  const exBtn = h("button", { class: "primary", textContent: "Export listing ZIP" });
+  const exMsg = (m: string, bad = false) => { exStatus.textContent = m; exStatus.classList.toggle("bad", bad); };
+
+  const copyText = () => COPY_FIELDS.map((f) => `# ${f.label} (${L.copy[f.key].length}/${f.max})\n${L.copy[f.key]}\n`).join("\n") +
+    `\n# Slides\n${L.slides.map((s, i) => `${i + 1}. ${s.headline}${s.sub ? ` — ${s.sub}` : ""}`).join("\n")}\n`;
+
+  exBtn.onclick = async () => {
+    if (exporting) return;
+    const targets = TARGETS.filter((t) => exportSel.has(t.id));
+    if (!targets.length && !featChk.checked && !icon) return exMsg("Choose at least one output.", true);
