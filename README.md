@@ -102,6 +102,6 @@ In headless Chrome, `e2e/run.mjs` generates two screenshots across all orientati
 - `core/` – Rust crate: manifest, face shader (`front`), meshes (`mesh`), rasterizer (`raster`), orchestration (`render`), wasm bindings
 - `web/` – Vite + TypeScript UI, worker pool (`engine.ts`, `worker.ts`), zip writer
 - `web/src/library.ts` – shared screenshot library (analysis, suggestions); `web/src/wizard/` – guided studio
-- `web/src/store/` – store listing studio: `model.ts` (targets, palettes, listing data), `templates.ts` (layouts), `render.ts` (Canvas drawing), `ai.ts` (text-only AI client), `storePage.ts` (UI); loaded lazily
+- `web/src/store/` – store listing studio (`shapes.ts` = background shape styles): `model.ts` (targets, palettes, listing data), `templates.ts` (layouts), `render.ts` (Canvas drawing), `ai.ts` (text-only AI client), `storePage.ts` (UI); loaded lazily
 - `web/src/video/` – video studio: `device3d.ts` (Three.js models), `animation.ts` (presets, easing, keyframes), `stage.ts` (renderer, lights, camera rig), `exporter.ts` (WebCodecs + muxers), `videoPage.ts` (UI); loaded lazily so the stills app stays small
 - `e2e/` – browser end-to-end checks
