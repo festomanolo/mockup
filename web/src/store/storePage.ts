@@ -575,8 +575,15 @@ export function storePage(devices: StoreDevice[]): { el: HTMLElement; load: (fil
       h("p", { class: "fine" }, "Shared with the video studio. ", h("a", { href: "/studio/" }, "Guided studio →"), " turns raw screenshots into mockups and picks the best ones for you."),
       drop, fileIn, mockIn, h("div", { class: "row tight" }, mockBtn), shotList, shotMsg),
     card("4 · Design",
-      palRow, customRow,
-      h("div", { class: "row" }, field("Font", fontSel), field("Text", inkSel)),
+      h("h3", { class: "sub3" }, "Background"),
+      presetRow, gradBar,
+      h("div", { class: "row tight" }, typeSel, addStop, reverseBtn, randomBtn),
+      h("label", { class: "fine range" }, "Angle", angleIn, angleOut),
+      stopRows,
+      h("h3", { class: "sub3" }, "Shapes (flow across the whole carousel)"),
+      gallery, layerBox, h("div", { class: "row tight" }, addLayer),
+      h("h3", { class: "sub3" }, "Text"),
+      h("div", { class: "row tight" }, field("Font", fontSel), field("Colour", inkSel), inkCustom),
       h("div", { class: "row" }, field("Phone device", phoneSel), field("Colour", finishSel)),
       field("Tablet device (for tablet sets)", tabletSel)),
     card("5 · Slides", slideBox, addSlide),
@@ -595,15 +602,14 @@ export function storePage(devices: StoreDevice[]): { el: HTMLElement; load: (fil
     h("p", { class: "sub" }, "App Store and Google Play screenshots, carousels and text. Draft the words with AI if you like, then edit everything and export a ready-to-upload ZIP."),
     h("div", { class: "layout slayout" }, left, side));
 
-  syncAiUi(); drawPalettes(); rebuildSlides(); rebuildCopy(); drawShots(); void refreshModels();
+  syncAiUi(); drawPresets(); drawGrad(); drawLayers(); rebuildSlides(); rebuildCopy(); drawShots(); void refreshModels();
   void makePlaceholders().then((ids) => { A.placeholders = ids; if (alive) void paintAll(); }).catch(() => { void paintAll(); });
 
   return {
     el,
     load: (files) => void addFiles(files),
     dispose() {
-      alive = false; renderToken++; clearTimeout(timer); aiAbort?.abort();
-      for (const s of A.shots) { dropImage(s.id); URL.revokeObjectURL(s.url); }
+      alive = false; renderToken++; clearTimeout(timer); aiAbort?.abort(); unsub();
       for (const id of A.placeholders) dropImage(id);
       if (icon) URL.revokeObjectURL(icon.url);
     },
