@@ -15,6 +15,19 @@ The renderer is Rust compiled to WebAssembly, running in a pool of Web Workers. 
 - **Backgrounds and shadows:** transparent, solid, 6 gradient presets plus a custom two-colour gradient with angle; padding (none/small/medium/large); soft, floating and contact shadows with a strength slider. Shadows are blurred from the device's own silhouette (two layers: ambient + contact), the canvas grows to fit, and the choice is remembered in the browser. Defaults: transparent background, small padding, soft shadow.
 - **Galaxy S24 Ultra detail (tilted views):** camera angle fitted to MockUPhone's right/left exports (screen corners give a 44° tilt and 35° spin); grey cover-glass bezel with black hairlines, thin titanium lip and groove, rounder 3D corners, and a wall shader that paints the SIM tray and pin hole, mic, USB-C, speaker grille, S Pen, antenna bands and side buttons. Positions are measured from those exports and listed under `details` in `core/devices.json`, so other models can get the same treatment once measured.
 
+## Video mockups (`/video/<device>/`)
+
+A second studio next to the stills: the device is rendered live in **WebGL (Three.js)** with a screenshot or screen recording on its screen, a camera animation on top, and exported as a video. Everything runs in the tab; nothing is uploaded. Reach it from the **Video** link in the header or the banner on any device page.
+
+- **Devices:** all 13 from `core/devices.json`, rebuilt as Three.js geometry from the same measured dimensions (rounded slab with filleted edge, glass, screen, camera cut-out, side keys, open laptop lid and keyboard deck, iMac foot/neck). Finish colours, portrait/landscape for phones and tablets, adjustable screen gloss.
+- **Screen media:** PNG/JPEG/WebP or MP4/WebM screen recordings (drop, paste or browse), fill/fit/stretch. Video frames are seeked per output frame at export, so they stay in sync however slow the machine is.
+- **Camera:** 14 presets (hero reveal, push-in, pull-out, orbit 360°, half orbit, pan, tilts, spiral, pendulum, float, dutch roll, macro fly-through, static), duration, global easing override, field of view, idle float. **Custom keyframes**: edit time, turn/tilt/roll, zoom, pan and per-segment easing, add a key at the playhead, scrub the timeline.
+- **Scene:** transparent / solid / 10 gradients / background image, four lighting presets, environment reflections (procedural studio map, no downloads), exposure, ground shadow.
+- **Audio:** add a soundtrack (looped, volume, fade-out) or use the screen video's own sound; muxed into the file.
+- **Export:** frame-by-frame (never real-time recording) through **WebCodecs**: MP4 (H.264) and WebM (VP9), 720p / 1080p / 1440p / 4K, 24/30/60 fps, 16:9, 9:16, 1:1, 4:5, 21:9, three quality levels. A transparent background exports WebM with alpha where the browser can encode it, otherwise a ZIP of transparent PNG frames (max 450 frames).
+
+Limitations: no URL-to-scrolling-video capture (that needs a server-side headless browser, which would break the "nothing leaves your machine" promise); one device per scene; the 3D models are simplified original geometry (no camera bumps, logos, speaker grills); export needs a WebCodecs browser (Chrome/Edge; Safari 16.4+ for H.264); 4K export is limited by the browser's maximum canvas size and encoder level.
+
 ## Dimension data
 
 All sizes are millimetres in `core/devices.json` (schema v2). Every device lists per-field `sources`:
