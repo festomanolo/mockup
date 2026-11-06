@@ -378,6 +378,24 @@ window.addEventListener("paste", (e) => {
   if (fs.length && currentLoad) currentLoad(fs);
 });
 
+let disposePage: (() => void) | null = null;
+
+function videoRoute(d: Device) {
+  document.title = `${d.name} video mockup – Mockup`;
+  const picker = el("select", {});
+  picker.setAttribute("aria-label", "Device");
+  for (const x of devices) picker.append(el("option", { value: x.id, textContent: `${x.brand} ${x.name}`, selected: x.id === d.id }));
+  picker.onchange = () => { history.pushState(null, "", `/video/${picker.value}/`); route(); };
+  import("./video/videoPage").then(({ videoPage }) => {
+    if (location.pathname.replace(/\/$/, "") !== `/video/${d.id}`) return; // navigated away while loading
+    const p = videoPage(d as unknown as DeviceSpec);
+    shell(el("div", {}, el("div", { class: "row tight" }, el("label", { class: "fine" }, "Device "), picker), p.el));
+    disposePage = p.dispose;
+    currentLoad = p.load;
+  }).catch((e) => shell(el("div", {}, el("h1", {}, "Video studio failed to load"), el("p", { class: "sub" }, String(e?.message ?? e)))));
+  shell(el("p", { class: "sub" }, "Loading 3D engine…"));
+}
+
 function route() {
   const m = location.pathname.match(/^\/model\/([\w-]+)\/?$/);
   const d = m && devices.find((x) => x.id === m[1]);
