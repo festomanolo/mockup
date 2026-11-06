@@ -85,3 +85,91 @@ export async function listModels(cfg: AiConfig): Promise<string[]> {
   return [];
 }
 
+function extractJson(text: string): any {
+  const cleaned = text.replace(/```(?:json)?/gi, "");
+  const a = cleaned.indexOf("{"), b = cleaned.lastIndexOf("}");
+  if (a < 0 || b <= a) throw new Error("no JSON object found");
+  return JSON.parse(cleaned.slice(a, b + 1));
+}
+
+const words = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
+const clip = (s: string, n: number) => (s.length <= n ? s : s.slice(0, n).replace(/\s+\S*$/, "").trim() || s.slice(0, n));
+
+/** Returns problems that justify one automatic retry. */
+function problems(j: any, n: number): string[] {
+  const out: string[] = [];
+  if (!Array.isArray(j?.slides) || j.slides.length !== n) out.push(`"slides" must be an array of exactly ${n} items`);
+  else j.slides.forEach((s: any, i: number) => {
+    if (typeof s?.headline !== "string" || !s.headline.trim()) out.push(`slide ${i + 1} has no headline`);
+    else if (words(s.headline) > LIMITS.headlineWords) out.push(`slide ${i + 1} headline has ${words(s.headline)} words (maximum ${LIMITS.headlineWords})`);
+    if (typeof s?.sub !== "string") out.push(`slide ${i + 1} has no "sub"`);
+  });
+  if (typeof j?.store !== "object" || !j.store) out.push(`"store" object is missing`);
+  return out;
+}
+
+function finalize(j: any, n: number): CopyResult {
+  const warnings: string[] = [];
+  const slides = Array.from({ length: n }, (_, i) => {
+    const s = j?.slides?.[i] ?? {};
+    let headline = typeof s.headline === "string" ? s.headline.trim() : "";
+    const w = headline.split(/\s+/);
+    if (w.length > LIMITS.headlineWords + 2) { headline = w.slice(0, LIMITS.headlineWords).join(" "); warnings.push(`Slide ${i + 1} headline was shortened.`); }
+    return { headline, sub: clip(typeof s.sub === "string" ? s.sub.trim() : "", LIMITS.sub) };
+  });
+  const st = (j?.store ?? {}) as Record<string, unknown>;
+  const limit: Record<keyof StoreCopy, number> = {
+    title: LIMITS.title, subtitle: LIMITS.subtitle, short: LIMITS.short, promo: LIMITS.promo, keywords: LIMITS.keywords,
+    description: LIMITS.description, whatsNew: LIMITS.whatsNew,
+  };
+  const store: Partial<StoreCopy> = {};
+  for (const k of Object.keys(limit) as (keyof StoreCopy)[]) {
+    const v = st[k];
+    if (typeof v !== "string") continue;
+    store[k] = v.trim().length > limit[k] ? clip(v.trim(), limit[k]) : v.trim();
+    if (v.trim().length > limit[k]) warnings.push(`“${k}” was over its ${limit[k]}-character limit and was trimmed.`);
+  }
+  return { slides, store, warnings };
+}
+
+/** Generates all slide copy plus store text. One automatic retry with the validation errors fed back. */
+export async function generateCopy(cfg: AiConfig, brief: Brief, n: number, signal: AbortSignal): Promise<CopyResult> {
+  const messages = [{ role: "system", content: SYSTEM }, { role: "user", content: briefText(brief, n) }];
+  let text = await chat(cfg, messages, signal);
+  for (let attempt = 0; ; attempt++) {
+    let json: any, errs: string[];
+    try { json = extractJson(text); errs = problems(json, n); } catch (e) { errs = [`the answer was not valid JSON (${(e as Error).message})`]; }
+    if (!errs.length) return finalize(json, n);
+    if (attempt >= 1) {
+      if (json && Array.isArray(json.slides) && json.slides.length >= 1) {
+        const r = finalize({ ...json, slides: json.slides.slice(0, n) }, n);
+        r.warnings.unshift(`The model did not fully follow the format (${errs[0]}). Review the text.`);
+        return r;
+      }
+      throw new Error(`The model did not return usable JSON (${errs[0]}). Try another model.`);
+    }
+    messages.push({ role: "assistant", content: text }, { role: "user", content: `Fix these problems and return only the corrected JSON: ${errs.join("; ")}.` });
+    text = await chat(cfg, messages, signal);
+  }
+}
+
+/** Rewrites one slide's headline and sub-line, keeping the rest of the story in mind. */
+export async function regenerateSlide(cfg: AiConfig, brief: Brief, all: { headline: string; sub: string }[], index: number, signal: AbortSignal): Promise<{ headline: string; sub: string }> {
+  const ctx = all.map((s, i) => `${i + 1}. ${s.headline} — ${s.sub}`).join("\n");
+  const messages = [
+    { role: "system", content: SYSTEM },
+    { role: "user", content: `${briefText(brief, all.length)}\n\nCurrent slides:\n${ctx}\n\nWrite a different, fresher option for slide ${index + 1} only. Do not repeat the wording of the other slides. Return only JSON: {"headline":"","sub":""}` },
+  ];
+  let text = await chat(cfg, messages, signal);
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const j = extractJson(text);
+      if (typeof j.headline === "string" && j.headline.trim() && words(j.headline) <= LIMITS.headlineWords + 1) {
+        return { headline: j.headline.trim(), sub: clip(typeof j.sub === "string" ? j.sub.trim() : "", LIMITS.sub) };
+      }
+    } catch { /* retry */ }
+    if (attempt >= 1) throw new Error("The model did not return a usable headline. Try again or edit it by hand.");
+    messages.push({ role: "assistant", content: text }, { role: "user", content: `Return only valid JSON {"headline":"","sub":""} with a headline of at most ${LIMITS.headlineWords} words.` });
+    text = await chat(cfg, messages, signal);
+  }
+}
