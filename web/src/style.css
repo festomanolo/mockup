@@ -181,3 +181,5 @@ progress { width: 100%; margin-top: 10px; }
 main:has(.slayout) { max-width: 1480px; }
 .slayout { grid-template-columns: minmax(0, 1fr) minmax(340px, 460px); }
 .slayout > * { min-width: 0; }
+.slayout .vcol { top: 12px; }
+.sstage { overflow: hidden; }
