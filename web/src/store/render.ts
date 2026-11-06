@@ -2,10 +2,12 @@
 // sit in the same accurate frames as the stills page. A slide is drawn from the whole panorama (its neighbours are
 // painted too, then cropped), which is what lets backgrounds and devices flow across slide edges.
 import { importImage, render } from "../engine";
-import { FEATURE, FONTS, paletteColors, type Listing } from "./model";
+import { FEATURE, FONTS, gradAt, type Gradient, type Listing } from "./model";
+import { drawShapes } from "./shapes";
 import { layout, type TextPlace } from "./templates";
 
-export type Shot = { id: number; url: string; name: string };
+/** `framed` shots are already mockups (device frame included): they are drawn as they are, never wrapped in a device. */
+export type Shot = { id: number; url: string; name: string; file: File; w: number; h: number; framed: boolean };
 export type Assets = { shots: Shot[]; placeholders: number[] };
 
 // ---------- device bitmaps ----------
