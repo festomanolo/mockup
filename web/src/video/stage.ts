@@ -30,7 +30,7 @@ export const DEFAULT_SETTINGS: StageSettings = {
 };
 
 export type Media =
-  | { kind: "image"; el: HTMLImageElement | ImageBitmap; w: number; h: number }
+  | { kind: "image"; el: HTMLImageElement | ImageBitmap | HTMLCanvasElement; w: number; h: number; /** Repainted every frame (screen sequence). */ live?: boolean }
   | { kind: "video"; el: HTMLVideoElement; w: number; h: number };
 
 const LIGHTS: Record<LightPreset, { key: number; fill: number; rim: number; ambient: number; keyPos: [number, number, number] }> = {
