@@ -254,6 +254,124 @@ export function storePage(devices: StoreDevice[]): { el: HTMLElement; load: (fil
   seamless.onchange = () => { L.seamless = seamless.checked; schedule(); };
   const kindSel = sel("Preview as", [["phone", "Preview: phone"], ["tablet", "Preview: tablet"]], previewKind, (v) => { previewKind = v as "phone" | "tablet"; schedule(); });
 
+  // ---------- design: gradient editor ----------
+  const hex2 = (n: number) => Math.round(Math.max(0, Math.min(255, n))).toString(16).padStart(2, "0");
+  const toHex = (rgb: number[]) => `#${hex2(rgb[0])}${hex2(rgb[1])}${hex2(rgb[2])}`;
+  const hsl = (hh: number, ss: number, ll: number) => {
+    const a = ss * Math.min(ll, 1 - ll), f = (n: number) => { const k = (n + hh / 30) % 12; return ll - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)); };
+    return toHex([f(0) * 255, f(8) * 255, f(4) * 255]);
+  };
+  const cssGrad = (g: Listing["bg"]) => {
+    const st = [...g.stops].sort((p, q) => p.p - q.p).map((x) => `${x.c} ${Math.round(x.p * 100)}%`).join(", ");
+    return g.type === "radial" ? `radial-gradient(circle, ${st})` : `linear-gradient(${g.angle}deg, ${st})`;
+  };
+  const gradBar = h("div", { class: "gradbar" });
+  const stopRows = h("div", { class: "stops" });
+  const presetRow = h("div", { class: "bgs" });
+  const angleIn = aria(h("input", { type: "range", min: "0", max: "360", step: "1", value: String(L.bg.angle) }), "Gradient angle");
+  const angleOut = h("span", { class: "val" });
+  const typeSel = sel("Gradient type", [["linear", "Linear"], ["radial", "Radial"]], L.bg.type, (v) => { L.bg.type = v as "linear" | "radial"; drawGrad(); schedule(); });
+  angleIn.oninput = () => { L.bg.angle = Number(angleIn.value); drawGrad(false); schedule(); };
+  function drawGrad(rebuildRows = true) {
+    gradBar.style.background = cssGrad(L.bg);
+    angleOut.textContent = `${L.bg.angle}°`;
+    angleIn.parentElement!.style.display = L.bg.type === "linear" ? "" : "none";
+    if (rebuildRows) {
+      stopRows.replaceChildren(...L.bg.stops.map((st, k) => {
+        const col = aria(h("input", { type: "color", value: st.c }), `Colour stop ${k + 1}`);
+        const pos = aria(h("input", { type: "range", min: "0", max: "100", step: "1", value: String(Math.round(st.p * 100)) }), `Position of stop ${k + 1}`);
+        const out = h("span", { class: "val", textContent: `${Math.round(st.p * 100)}%` });
+        col.oninput = () => { st.c = col.value; gradBar.style.background = cssGrad(L.bg); drawGallery(); schedule(); };
+        pos.oninput = () => { st.p = Number(pos.value) / 100; out.textContent = `${pos.value}%`; gradBar.style.background = cssGrad(L.bg); drawGallery(); schedule(); };
+        const rm = h("button", { class: "rm2", textContent: "×", title: "Remove colour", disabled: L.bg.stops.length <= 2 });
+        rm.setAttribute("aria-label", `Remove colour stop ${k + 1}`);
+        rm.onclick = () => { L.bg.stops.splice(k, 1); drawGrad(); schedule(); };
+        return h("div", { class: "stop" }, col, pos, out, rm);
+      }));
+      drawGallery();
+    }
+  }
+  function drawPresets() {
+    presetRow.replaceChildren(...PALETTES.map((p) => {
+      const b = h("button", { class: "bgchip", title: p.name });
+      b.setAttribute("aria-label", `${p.name} gradient`);
+      b.style.background = cssGrad(gradFromColors(p.colors));
+      b.onclick = () => { L.bg = gradFromColors(p.colors, L.bg.angle, L.bg.type); angleIn.value = String(L.bg.angle); typeSel.value = L.bg.type; drawGrad(); schedule(); };
+      return b;
+    }));
+  }
+  const addStop = h("button", { class: "chip", textContent: "+ Add colour" });
+  addStop.onclick = () => {
+    if (L.bg.stops.length >= 6) return;
+    const st = [...L.bg.stops].sort((p, q) => p.p - q.p);
+    let gi = 0, gap = -1;
+    for (let k = 0; k < st.length - 1; k++) if (st[k + 1].p - st[k].p > gap) { gap = st[k + 1].p - st[k].p; gi = k; }
+    const p = (st[gi].p + st[gi + 1].p) / 2;
+    L.bg.stops.push({ p, c: toHex(gradAt(L.bg, p)) });
+    L.bg.stops.sort((x, y) => x.p - y.p);
+    drawGrad(); schedule();
+  };
+  const reverseBtn = h("button", { class: "chip", textContent: "Reverse" });
+  reverseBtn.onclick = () => { L.bg.stops.forEach((x) => (x.p = 1 - x.p)); L.bg.stops.sort((x, y) => x.p - y.p); drawGrad(); schedule(); };
+  const randomBtn = h("button", { class: "chip", textContent: "🎲 Random" });
+  randomBtn.onclick = () => {
+    const hue = Math.random() * 360, spread = 40 + Math.random() * 80, n = 3;
+    L.bg.stops = Array.from({ length: n }, (_, k) => ({ p: k / (n - 1), c: hsl((hue + k * spread) % 360, 0.65 + Math.random() * 0.25, k === 0 ? 0.28 + Math.random() * 0.12 : 0.5 + k * 0.06) }));
+    drawGrad(); schedule();
+  };
+
+  // ---------- design: background shapes ----------
+  const gallery = h("div", { class: "shapegal" });
+  const layerBox = h("div", { class: "layers" });
+  let activeLayer = 0;
+  function drawGallery() {
+    const none = h("button", { class: "shapechip", title: "No shapes" }, h("span", { class: "nonebox", textContent: "∅" }), h("small", {}, "None"));
+    none.setAttribute("aria-pressed", String(L.shapes.length === 0));
+    none.onclick = () => { L.shapes = []; drawGallery(); drawLayers(); schedule(); };
+    gallery.replaceChildren(none, ...SHAPE_STYLES.map((t) => {
+      const cv = document.createElement("canvas"); cv.width = 120; cv.height = 72;
+      renderShapePreview(cv, L.bg, { ...(L.shapes[activeLayer] ?? newShape(t.id)), style: t.id });
+      const b = h("button", { class: "shapechip", title: t.label }, cv, h("small", {}, t.label));
+      b.setAttribute("aria-pressed", String(L.shapes.some((x) => x.style === t.id)));
+      b.onclick = () => {
+        if (!L.shapes.length) { L.shapes.push(newShape(t.id)); activeLayer = 0; } else L.shapes[Math.min(activeLayer, L.shapes.length - 1)].style = t.id;
+        drawGallery(); drawLayers(); schedule();
+      };
+      return b;
+    }));
+  }
+  function drawLayers() {
+    layerBox.replaceChildren(...L.shapes.map((ly, k) => {
+      const style = sel(`Shape layer ${k + 1} style`, SHAPE_STYLES.map((t): [string, string] => [t.id, t.label]), ly.style, (v) => { ly.style = v as ShapeStyleId; activeLayer = k; drawGallery(); schedule(); });
+      const col = aria(h("input", { type: "color", value: ly.color }), `Shape layer ${k + 1} colour`);
+      col.style.display = ly.tone === "custom" ? "" : "none";
+      col.oninput = () => { ly.color = col.value; schedule(); };
+      const tone = sel(`Shape layer ${k + 1} tone`, [["auto", "Auto"], ["light", "Light"], ["dark", "Dark"], ["custom", "Custom"]], ly.tone, (v) => { ly.tone = v as ShapeLayer["tone"]; col.style.display = v === "custom" ? "" : "none"; schedule(); });
+      const opacity = aria(h("input", { type: "range", min: "5", max: "100", value: String(Math.round(ly.opacity * 100)) }), `Shape layer ${k + 1} opacity`);
+      opacity.oninput = () => { ly.opacity = Number(opacity.value) / 100; schedule(); };
+      const size = aria(h("input", { type: "range", min: "40", max: "250", value: String(Math.round(ly.scale * 100)) }), `Shape layer ${k + 1} size`);
+      size.oninput = () => { ly.scale = Number(size.value) / 100; schedule(); };
+      const dice = h("button", { class: "rm2", textContent: "🎲", title: "Shuffle positions" });
+      dice.setAttribute("aria-label", `Shuffle shape layer ${k + 1}`);
+      dice.onclick = () => { ly.seed = Math.floor(Math.random() * 1000); schedule(); };
+      const rm = h("button", { class: "rm2", textContent: "×", title: "Remove layer" });
+      rm.setAttribute("aria-label", `Remove shape layer ${k + 1}`);
+      rm.onclick = () => { L.shapes.splice(k, 1); activeLayer = 0; drawGallery(); drawLayers(); schedule(); };
+      const row = h("div", { class: "layer" + (k === activeLayer ? " on" : "") },
+        h("div", { class: "lhead" }, h("strong", {}, `Layer ${k + 1}`), style, tone, col, dice, rm),
+        h("label", { class: "fine range" }, "Opacity", opacity), h("label", { class: "fine range" }, "Size", size));
+      row.onfocusin = () => { activeLayer = k; layerBox.querySelectorAll(".layer").forEach((el2, q) => el2.classList.toggle("on", q === k)); };
+      return row;
+    }));
+  }
+  const addLayer = h("button", { class: "chip", textContent: "+ Add shape layer" });
+  addLayer.onclick = () => {
+    if (L.shapes.length >= 3) return;
+    const used = new Set(L.shapes.map((x) => x.style));
+    L.shapes.push(newShape((SHAPE_STYLES.find((t) => !used.has(t.id)) ?? SHAPE_STYLES[0]).id));
+    activeLayer = L.shapes.length - 1; drawGallery(); drawLayers(); schedule();
+  };
+
   // ---------- slides ----------
   const slideBox = h("div", { class: "slides" });
   const fixBridges = () => {
@@ -437,7 +555,7 @@ export function storePage(devices: StoreDevice[]): { el: HTMLElement; load: (fil
   function syncAll() {
     nameIn.value = L.app.name; ideaIn.value = L.app.idea; audIn.value = L.app.audience; toneIn.value = L.app.tone; langIn.value = L.app.language;
     phoneSel.value = L.deviceId; tabletSel.value = L.tabletId; fillFinish(); fontSel.value = L.font; inkSel.value = L.textColor; seamless.checked = L.seamless;
-    selected = 0; drawPalettes(); rebuildSlides(); rebuildCopy();
+    selected = 0; inkCustom.value = L.textCustom; inkCustom.style.display = L.textColor === "custom" ? "" : "none"; angleIn.value = String(L.bg.angle); typeSel.value = L.bg.type; drawGrad(); drawLayers(); rebuildSlides(); rebuildCopy();
   }
 
   // ---------- assemble ----------
@@ -453,7 +571,9 @@ export function storePage(devices: StoreDevice[]): { el: HTMLElement; load: (fil
       aiNote,
       h("label", { class: "chk" }, consent, " ", consentText),
       genBtn, stopBtn, aiStatus),
-    card("3 · Screenshots", drop, fileIn, shotList, shotMsg),
+    card("3 · Screenshots",
+      h("p", { class: "fine" }, "Shared with the video studio. ", h("a", { href: "/studio/" }, "Guided studio →"), " turns raw screenshots into mockups and picks the best ones for you."),
+      drop, fileIn, mockIn, h("div", { class: "row tight" }, mockBtn), shotList, shotMsg),
     card("4 · Design",
       palRow, customRow,
       h("div", { class: "row" }, field("Font", fontSel), field("Text", inkSel)),
