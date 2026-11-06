@@ -409,7 +409,7 @@ function route() {
     videoRoute(d);
   } else if (d) {
     devicePage(d);
-  } else if (m) {
+  } else if (m || v) {
     shell(el("div", {}, el("h1", {}, "Device not found"), el("a", { href: "/" }, "Back to all devices")));
   } else home();
 }
