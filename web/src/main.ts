@@ -400,7 +400,8 @@ function route() {
   disposePage?.();
   disposePage = null;
   const m = location.pathname.match(/^\/model\/([\w-]+)\/?$/);
-  const d = m && devices.find((x) => x.id === m[1]);
+  const v = location.pathname.match(/^\/video\/([\w-]+)\/?$/);
+  const d = (m || v) && devices.find((x) => x.id === (m || v)![1]);
   currentLoad = null;
   document.title = "Mockup – device mockups in your browser";
   window.scrollTo(0, 0);
