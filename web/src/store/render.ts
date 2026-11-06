@@ -143,3 +143,149 @@ function drawDevice(c: C, bmp: ImageBitmap, x: number, top: number, w: number, r
   // glow
   const g = c.createRadialGradient(cx, cy, 0, cx, cy, w * 0.95);
   g.addColorStop(0, dark ? "rgba(255,255,255,.35)" : "rgba(255,255,255,.2)"); g.addColorStop(1, "rgba(255,255,255,0)");
+  c.fillStyle = g; c.fillRect(cx - w, cy - h, w * 2, h * 2);
+  c.save();
+  c.translate(cx, cy);
+  c.rotate(rot);
+  c.shadowColor = dark ? "rgba(20,25,40,.38)" : "rgba(0,0,0,.45)";
+  c.shadowBlur = W * 0.07;
+  c.shadowOffsetY = W * 0.03;
+  c.imageSmoothingQuality = "high";
+  c.drawImage(bmp, -w / 2, -h / 2, w, h);
+  c.restore();
+}
+
+function wrap(c: C, text: string, maxW: number): string[] {
+  const words = text.trim().split(/\s+/).filter(Boolean);
+  const lines: string[] = [];
+  let cur = "";
+  for (const wd of words) {
+    const t = cur ? `${cur} ${wd}` : wd;
+    if (c.measureText(t).width <= maxW || !cur) cur = t; else { lines.push(cur); cur = wd; }
+  }
+  if (cur) lines.push(cur);
+  return lines;
+}
+
+function drawText(c: C, L: Listing, p: TextPlace, headline: string, sub: string, W: number, ink: { fg: string; soft: string }) {
+  if (!headline.trim() && !sub.trim()) return;
+  const f = FONTS[L.font];
+  c.save();
+  c.textBaseline = "top";
+  c.textAlign = p.align;
+  let size = W * 0.088 * p.scale;
+  let lines: string[] = [];
+  const set = (s: number) => { c.font = `${f.weight} ${s}px ${f.css}`; };
+  for (let k = 0; k < 24; k++) {
+    set(size);
+    lines = wrap(c, headline, p.w);
+    if (lines.length <= p.maxLines && lines.every((l) => c.measureText(l).width <= p.w * 1.001)) break;
+    size *= 0.93;
+  }
+  (c as any).letterSpacing = `${-size * 0.015}px`;
+  c.fillStyle = ink.fg;
+  const lh = size * 1.08;
+  let y = p.y;
+  for (const l of lines) { c.fillText(l, p.x, y); y += lh; }
+  if (sub.trim()) {
+    const ss = Math.min(size * 0.42, W * 0.04 * p.scale);
+    (c as any).letterSpacing = "0px";
+    c.font = `500 ${ss}px ${f.css}`;
+    c.fillStyle = ink.soft;
+    y += size * 0.16;
+    for (const l of wrap(c, sub, p.w * 0.92).slice(0, 3)) { c.fillText(l, p.x, y); y += ss * 1.3; }
+  }
+  c.restore();
+}
+
+// ---------- public: slide ----------
+const pickShot = (A: Assets, shot: number | null, j: number, off: number): number | null => {
+  if (A.shots.length) return A.shots[((shot ?? j) + off) % A.shots.length].id;
+  if (A.placeholders.length) return A.placeholders[((shot ?? j) + off) % A.placeholders.length];
+  return null;
+};
+
+export async function renderSlide(canvas: HTMLCanvasElement, L: Listing, A: Assets, i: number, W: number, H: number, kind: "phone" | "tablet") {
+  const n = L.slides.length;
+  const deviceId = kind === "tablet" ? L.tabletId : L.deviceId;
+  const a = await deviceAspect(deviceId, L.finish);
+  const js = [i - 1, i, i + 1].filter((j) => j >= 0 && j < n);
+  type Job = { j: number; place: ReturnType<typeof layout>["devices"][number]; bmp: Promise<ImageBitmap> };
+  const lays = js.map((j) => ({ j, lay: layout(L.slides[j].template, W, H, a) }));
+  const jobs: Job[] = [];
+  for (const { j, lay } of lays) {
+    for (const place of lay.devices) {
+      const off = (j - i) * W + place.x;
+      if (Math.abs(off - W / 2) > W / 2 + place.w * 0.85) continue; // not visible on this slide
+      const need = Math.ceil(place.w / a);
+      jobs.push({ j, place, bmp: deviceBitmap(deviceId, L.finish, pickShot(A, L.slides[j].shot, j, place.shotOffset), need) });
+    }
+  }
+  const bmps = await Promise.all(jobs.map((x) => x.bmp));
+  if (canvas.width !== Math.round(W)) canvas.width = Math.round(W);
+  if (canvas.height !== Math.round(H)) canvas.height = Math.round(H);
+  const c = canvas.getContext("2d")!;
+  c.setTransform(1, 0, 0, 1, 0, 0);
+  c.clearRect(0, 0, W, H);
+  drawBackground(c, L, i, n, W, H);
+  for (const { j, lay } of lays) {
+    if (lay.rings) { c.save(); c.translate((j - i) * W, 0); drawRings(c, W / 2, H * 0.58, W, inkFor(L, j, n).dark); c.restore(); }
+  }
+  jobs.forEach((job, k) => {
+    c.save();
+    c.translate((job.j - i) * W, 0);
+    drawDevice(c, bmps[k], job.place.x, job.place.top, job.place.w, job.place.rot, W, inkFor(L, job.j, n).dark);
+    c.restore();
+  });
+  // text last, only the current slide's own text, so nothing is cut at an edge
+  const s = L.slides[i];
+  const lay = lays.find((x) => x.j === i)!.lay;
+  drawText(c, L, lay.text, s.headline, s.sub, W, inkFor(L, i, n));
+}
+
+// ---------- public: Google Play feature graphic (1024×500) ----------
+export async function renderFeature(canvas: HTMLCanvasElement, L: Listing, A: Assets, W = FEATURE.w, H = FEATURE.h) {
+  canvas.width = W; canvas.height = H;
+  const c = canvas.getContext("2d")!;
+  const cs = paletteColors(L);
+  const g = c.createLinearGradient(0, 0, W, H * 0.6);
+  cs.forEach((col, k) => g.addColorStop(cs.length === 1 ? 0 : k / (cs.length - 1), col));
+  c.fillStyle = g; c.fillRect(0, 0, W, H);
+  const r = c.createRadialGradient(W * 0.78, H * 0.45, 0, W * 0.78, H * 0.45, H * 1.1);
+  r.addColorStop(0, "rgba(255,255,255,.22)"); r.addColorStop(1, "rgba(255,255,255,0)");
+  c.fillStyle = r; c.fillRect(0, 0, W, H);
+  const ink = inkFor(L, 0, 1);
+  const f = FONTS[L.font];
+  const s0 = L.slides[0];
+  c.textBaseline = "top"; c.textAlign = "left";
+  c.fillStyle = ink.soft; c.font = `700 ${H * 0.07}px ${f.css}`;
+  (c as any).letterSpacing = "1px";
+  c.fillText((L.app.name || "Your app").toUpperCase(), W * 0.06, H * 0.14);
+  (c as any).letterSpacing = "0px";
+  const maxW = W * 0.5;
+  let size = H * 0.17, lines: string[] = [];
+  for (let k = 0; k < 20; k++) {
+    c.font = `${f.weight} ${size}px ${f.css}`;
+    lines = wrap(c, s0.headline, maxW);
+    if (lines.length <= 3) break;
+    size *= 0.93;
+  }
+  c.fillStyle = ink.fg;
+  let y = H * 0.27;
+  for (const l of lines) { c.fillText(l, W * 0.06, y); y += size * 1.08; }
+  if (s0.sub) {
+    const ss = H * 0.062;
+    c.font = `500 ${ss}px ${f.css}`; c.fillStyle = ink.soft; y += size * 0.12;
+    for (const l of wrap(c, s0.sub, maxW).slice(0, 2)) { c.fillText(l, W * 0.06, y); y += ss * 1.3; }
+  }
+  const a = await deviceAspect(L.deviceId, L.finish);
+  const dw = H * 0.78 * a;
+  const places = [{ x: W * 0.68, top: H * 0.16, rot: -0.09, off: 1 }, { x: W * 0.85, top: H * 0.1, rot: 0.07, off: 0 }];
+  for (const p of places) {
+    const bmp = await deviceBitmap(L.deviceId, L.finish, pickShot(A, L.slides[0].shot, 0, p.off), Math.ceil(dw / a));
+    drawDevice(c, bmp, p.x, p.top, dw, p.rot, W * 0.5, ink.dark);
+  }
+}
+
+export const toBlob = (c: HTMLCanvasElement, type: "image/png" | "image/jpeg", q = 0.95) =>
+  new Promise<Blob>((ok, no) => c.toBlob((b) => (b ? ok(b) : no(new Error("The browser could not encode an image (out of memory?)."))), type, q));
