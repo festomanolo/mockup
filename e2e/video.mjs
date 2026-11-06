@@ -53,6 +53,8 @@ try {
     for (let i = 0; i < n; i++) b.writeInt16LE(Math.round(Math.sin(i * 2 * Math.PI * 440 / 48000) * 12000), 44 + i * 2);
     const wav = join(out, "tone.wav"); writeFileSync(wav, b);
     await (await page.$('input[type=file][accept="audio/*"]')).uploadFile(wav);
+    await new Promise((r) => setTimeout(r, 800));
+  }
   await page.click("button.primary");
   await page.waitForFunction(() => /Done|cannot|Error|failed/i.test(document.querySelector(".status")?.textContent ?? ""), { timeout: 180000 });
   const status = await page.$eval(".status", (e) => e.textContent);
