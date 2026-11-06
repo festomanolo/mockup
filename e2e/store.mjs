@@ -74,7 +74,7 @@ try {
   console.log("export:", await page.evaluate(() => [...document.querySelectorAll(".status")].pop().textContent));
   let zipFile;
   for (let k = 0; k < 60 && !zipFile; k++) { // Chrome writes a .crdownload first
-  await new Promise((r) => setTimeout(r, 1500));
+    zipFile = readdirSync(out).find((f) => f.endsWith(".zip"));
   const zipFile = readdirSync(out).find((f) => f.endsWith(".zip"));
   if (!zipFile) fail("no zip downloaded");
   else {
