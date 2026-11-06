@@ -128,6 +128,7 @@ function home() {
     el("a", { class: "studio", href }, el("strong", {}, title), el("span", {}, text));
   shell(el("div", {}, el("h1", {}, "Device mockups"), el("p", { class: "sub" }, "Pick a device, drop a screenshot, download the mockup."),
     el("div", { class: "studios" },
+      studio(`/video/${devices[0].id}/`, "🎬 Video mockups", "3D camera moves, MP4 / WebM export"),
     el("div", { class: "tools" }, search), chips, el("div", { class: "gap" }), grid));
 }
 
