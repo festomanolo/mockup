@@ -173,6 +173,8 @@ function balanced(c: C, text: string, maxW: number): string[] {
   if (base.length < 2) return base;
   let best = base;
   for (let w = maxW * 0.96; w > maxW * 0.45; w -= maxW * 0.04) {
+    const t = wrap(c, text, w);
+    if (t.length !== base.length || t.some((l) => c.measureText(l).width > maxW)) break;
 function drawText(c: C, L: Listing, p: TextPlace, headline: string, sub: string, W: number, ink: { fg: string; soft: string }) {
   if (!headline.trim() && !sub.trim()) return;
   const f = FONTS[L.font];
