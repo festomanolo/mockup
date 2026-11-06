@@ -2,6 +2,7 @@
 import { EASE_LABELS, evaluate, PRESETS, type EaseName, type Key } from "./animation";
 import type { DeviceSpec } from "./device3d";
 import { alphaWebmSupported, exportVideo, MAX_PNG_FRAMES, webCodecsSupported } from "./exporter";
+import { library } from "../library";
 import { DEFAULT_SETTINGS, Stage, type Bg, type LightPreset, type Media } from "./stage";
 
 type Props<K extends keyof HTMLElementTagNameMap> = Partial<HTMLElementTagNameMap[K]> & { class?: string };
@@ -94,7 +95,21 @@ export function videoPage(d: DeviceSpec): VideoPage {
     dirty = true;
   };
   const cycles = () => Math.max(1, Math.round(st.duration / 4));
-  const drawNow = () => stage.draw(st.keys, st.u, cycles());
+  // A sequence of library screenshots shown one after another on the device screen, with a short cross-fade.
+  let slideshow: { frames: ImageBitmap[]; canvas: HTMLCanvasElement } | null = null;
+  const paintSlideshow = (u: number) => {
+    if (!slideshow) return;
+    const { frames, canvas: cv } = slideshow, x = cv.getContext("2d")!, m = frames.length;
+    const cover = (img: ImageBitmap) => {
+      const k = Math.max(cv.width / img.width, cv.height / img.height), w = img.width * k, hh = img.height * k;
+      x.drawImage(img, (cv.width - w) / 2, (cv.height - hh) / 2, w, hh);
+    };
+    const p = Math.min(0.99999, Math.max(0, u)) * m, idx = Math.floor(p), f = p - idx;
+    x.globalAlpha = 1; x.fillStyle = "#000"; x.fillRect(0, 0, cv.width, cv.height);
+    cover(frames[idx]);
+    if (f > 0.86) { const t = (f - 0.86) / 0.14; x.globalAlpha = t * t * (3 - 2 * t); cover(frames[(idx + 1) % m]); x.globalAlpha = 1; }
+  };
+  const drawNow = () => { paintSlideshow(st.u); stage.draw(st.keys, st.u, cycles()); };
 
   // ---------- media ----------
   const hint = h("div", { class: "vhint" }, "Add an image or video for the screen");
