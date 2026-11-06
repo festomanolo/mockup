@@ -84,7 +84,8 @@ try {
     }, "file://" + join(out, mp4));
     console.log(device, JSON.stringify(info));
     if (AUDIO) { const buf = readFileSync(join(out, mp4)); if (!buf.includes("mp4a")) fail("no AAC track in mp4"); else console.log("AAC track present"); }
-    if (Math.abs(info.dur - 2) > 0.15) fail(`duration ${info.dur}`);
+    if (info.w !== Number(RES) || info.h !== Math.round(Number(RES) * 9 / 16)) fail(`size ${info.w}x${info.h}`);
+    if (Math.abs(info.dur - Number(DUR)) > 0.15) fail(`duration ${info.dur}`);
     if (!(info.corner[2] > 200 && info.corner[0] < 120)) fail(`background is not the Ocean gradient: ${info.corner}`);
     if (info.red < 2000) fail(`screen image not visible (${info.red} red pixels)`);
     if (info.diff < 1000) fail("first and last frame are identical: camera did not move");
