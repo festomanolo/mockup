@@ -2,6 +2,7 @@ import "./style.css";
 import devicesJson from "../../core/devices.json";
 import { zip } from "./zip";
 import { dropImage, importImage, render, renderEncoded, Superseded, type Rendered } from "./engine";
+import type { DeviceSpec } from "./video/device3d";
 
 type Source = { field: string; status: "fetched" | "derived" | "estimated" | "generic"; url?: string; note?: string };
 type Device = {
