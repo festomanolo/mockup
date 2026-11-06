@@ -358,6 +358,7 @@ function devicePage(d: Device) {
     specs(d));
   shell(el("div", {}, el("a", { href: "/", class: "back", textContent: "← All devices" }),
     el("div", { class: "layout" }, stage, panel)));
+  panel.prepend(el("a", { class: "vidlink", href: `/video/${d.id}/` }, "🎬 Make a 3D video mockup of this device →"));
   drawSw(); drawOri(); drawBgs(); drawList(); refresh();
   currentLoad = (fs) => void load(fs);
 }
