@@ -503,7 +503,8 @@ export function videoPage(d: DeviceSpec): VideoPage {
       slider("Volume", 0, 1, 0.05, 1, (v) => { st.volume = v; if (audioEl) audioEl.volume = v; }),
       slider("Fade out (s)", 0, 5, 0.5, 1, (v) => { st.fadeOut = v; })),
     card("Export", h("div", { class: "row" }, aspectSel, resSel, fpsSel), h("div", { class: "row tight" }, fmtSel, qualSel), exportInfo,
-      gen, bar, cancel, status));
+      gen, bar, cancel, status,
+      h("p", { class: "fine" }, "Next: ", h("a", { href: "/store/" }, "build the App Store & Play listing →"))));
 
   const timeline = h("div", { class: "timeline" }, playBtn, h("div", { class: "track" }, scrub, marks), clock);
   const stageCol = h("div", { class: "vcol" }, stageCard, timeline);
@@ -515,6 +516,7 @@ export function videoPage(d: DeviceSpec): VideoPage {
   // ---------- run ----------
   stageCard.ondragover = (e) => e.preventDefault();
   sizeWrap(); drawSw(); drawBgs(); rebuildKeys(); drawKeys(); syncExportInfo();
+  void useLibrary().catch(() => {}); // screens picked in the Guided studio show up straight away
   let lastTick = performance.now();
   let raf = 0;
   const loop = (now: number) => {
@@ -542,6 +544,7 @@ export function videoPage(d: DeviceSpec): VideoPage {
       abort?.abort();
       ro.disconnect();
       document.removeEventListener("visibilitychange", onVis);
+      unsubLib();
       clearMedia();
       setAudio(null);
       stage.dispose();
