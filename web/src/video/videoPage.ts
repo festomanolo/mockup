@@ -402,7 +402,7 @@ export function videoPage(d: DeviceSpec): VideoPage {
     const prevBg = stage.settings.bg;
     if (prevBg.kind === "transparent" && !transparent) { stage.settings.bg = { kind: "solid", color: "#000000" }; stage.applySettings(); }
     const restore0 = stage.enterExport(w, hh);
-    const restore = stage.enterExport(w, hh);
+    const restore = () => { restore0(); if (stage.settings.bg !== prevBg) { stage.settings.bg = prevBg; stage.applySettings(); } };
     const audioSrc = st.audioFile ?? (st.useVideoAudio && st.media?.kind === "video" ? st.media.file : null);
     const t0 = performance.now();
     try {
