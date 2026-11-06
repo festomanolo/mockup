@@ -186,3 +186,5 @@ main:has(.slayout) { max-width: 1480px; }
 .sstrip { max-width: 100%; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
 .slide input, .slide select, .shead select { min-width: 0; }
 .shead select { max-width: 46%; }
+.row { flex-wrap: wrap; }
+@media (max-width: 1000px) {
