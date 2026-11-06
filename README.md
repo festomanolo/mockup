@@ -47,7 +47,7 @@ Why not bundle MockUPhone's frame images: the `oursky/mockuphone.com` repository
 ## Known limitations
 
 - Frames are original artwork, not manufacturer renders. They are accurate in size and proportion, but details such as camera bumps, speaker grills, hinge shape, logos and the exact curved iMac stand are simplified or absent.
-- No multi-device canvas yet; PSD input is not supported. Shadows are drop shadows from the silhouette, not a physically modelled ground plane.
+- No multi-device canvas yet (stills and video); PSD input is not supported. Shadows are drop shadows from the silhouette, not a physically modelled ground plane.
 - Estimated values (above) are not measured from real products.
 - Trademarks: product names are used descriptively; no logos are drawn. Review brand/trade-dress guidance before selling.
 
