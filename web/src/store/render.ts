@@ -169,6 +169,8 @@ function wrap(c: C, text: string, maxW: number): string[] {
 
 /** Wraps like `wrap` but narrows the measure while the line count stays the same, so the last line is never a lone word. */
 function balanced(c: C, text: string, maxW: number): string[] {
+  const base = wrap(c, text, maxW);
+  if (base.length < 2) return base;
 function drawText(c: C, L: Listing, p: TextPlace, headline: string, sub: string, W: number, ink: { fg: string; soft: string }) {
   if (!headline.trim() && !sub.trim()) return;
   const f = FONTS[L.font];
