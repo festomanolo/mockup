@@ -2,7 +2,7 @@
 // rendered, downloaded and decoded again (size, duration, background and screen colours, and motion).
 import puppeteer from "puppeteer-core";
 import { spawn } from "node:child_process";
-import { mkdtempSync, writeFileSync, readdirSync } from "node:fs";
+import { mkdtempSync, writeFileSync, readdirSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
